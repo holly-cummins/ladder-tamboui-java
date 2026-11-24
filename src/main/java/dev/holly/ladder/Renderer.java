@@ -65,6 +65,8 @@ public final class Renderer {
 
         if (game.state() == Game.State.TITLE) {
             frame.renderWidget(Paragraph.builder().text(titleText(game)).block(block).centered().build(), rows.get(0));
+        } else if (game.state() == Game.State.HOW_TO_PLAY) {
+            frame.renderWidget(Paragraph.builder().text(howToPlayText()).block(block).build(), rows.get(0));
         } else {
             frame.renderWidget(Paragraph.builder().text(field(game)).block(block).build(), rows.get(0));
             String banner = banner(game);
@@ -113,6 +115,36 @@ public final class Renderer {
         lines.add(Line.empty());
         lines.add(styleSwitcher());
         lines.add(Line.styled("Press space to start", theme.accent()));
+        return Text.from(lines);
+    }
+
+    /** Shown once, between the title and the first game: one press of a key is all it takes. */
+    private Text howToPlayText() {
+        List<Line> lines = new ArrayList<>();
+        for (int i = 0; i < 3; i++) {
+            lines.add(Line.empty());
+        }
+        lines.add(Line.styled("  HOW TO PLAY", theme.value()));
+        lines.add(Line.empty());
+        lines.add(Line.styled("  One press is enough: no need to hold keys down or mash them.", theme.accent()));
+        lines.add(Line.styled("  The lad remembers what you asked for and gets on with it.", theme.accent()));
+        lines.add(Line.empty());
+        String[][] keys = {
+                {theme.leftRightKeys(), "Run. You keep going until you hit something."},
+                {"b", "Stop."},
+                {theme.upDownKeys(), "Climb. Press it early, while running or jumping:"},
+                {"", "you catch the next ladder you reach."},
+                {theme.jumpKey(), "Jump. Over boulders, gaps and low pipes."},
+                {"", "In mid-air, steer or stop with " + theme.leftRightKeys() + " and b."},
+                {"p", "Pause.     s  Switch style.     q  Quit."},
+        };
+        for (String[] k : keys) {
+            lines.add(Line.from(
+                    Span.styled(String.format("  %-6s ", k[0]), theme.value()),
+                    Span.styled(k[1], theme.plain())));
+        }
+        lines.add(Line.empty());
+        lines.add(Line.styled("  Press any key to start", theme.accent()));
         return Text.from(lines);
     }
 

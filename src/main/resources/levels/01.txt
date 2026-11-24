@@ -1,10 +1,10 @@
-name: Easy Street
+name: Morning Cup
 time: 90
 boulders: 4
 spawn: 60
 ---
 
-                   |v                   v|
+                    v                   v
       |
  E    |     H                                   H       &
 ############H###############   #################H###########

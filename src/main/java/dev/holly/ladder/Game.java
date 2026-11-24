@@ -11,14 +11,13 @@ import java.util.Random;
  */
 public final class Game {
 
-    public enum State { TITLE, PLAYING, PAUSED, DYING, LEVEL_DONE, GAME_OVER }
+    public enum State { TITLE, HOW_TO_PLAY, PLAYING, PAUSED, DYING, LEVEL_DONE, GAME_OVER }
 
     /** Ticks per second of the game clock; {@link Main} drives {@link #tick()} at this rate. */
     public static final int TICKS_PER_SECOND = 20;
 
     static final int PLAYER_PERIOD = 2;          // player moves every N ticks
     static final int STARTING_LIVES = 4;
-    static final int CLIMB_REQUEST_STEPS = 12;   // how long an up/down request waits for a ladder
     static final int[] JUMP_ARC = {-1, -1, 0, 1, 1};
     static final int TREASURE_POINTS = 100;
     static final int TIME_BONUS_PER_SECOND = 10;
@@ -41,6 +40,7 @@ public final class Game {
     private int stateTicks;
     private int timeLeftTicks;
     private int nextSpawnTick;
+    private boolean howToPlayShown; // the how-to-play screen is shown before the first game only
     private int score;
     private int lives;
     private int highScore;
@@ -52,32 +52,53 @@ public final class Game {
 
     // ---------------------------------------------------------------- input
 
-    public void left() { if (state == State.PLAYING) { player.dir = -1; } }
-    public void right() { if (state == State.PLAYING) { player.dir = 1; } }
+    /**
+     * Starts running left. In mid-air this steers the jump too: the arc keeps going but the lad can stop
+     * or turn round.
+     */
+    public void left() { steer(-1); }
 
+    public void right() { steer(1); }
+
+    private void steer(int dir) {
+        if (state == State.PLAYING) {
+            player.dir = dir;
+            if (player.jumpStep >= 0) {
+                player.jumpDir = dir;
+            }
+        }
+    }
+
+    /**
+     * Asks to climb up. The request waits, while you run, jump or fall, until the lad reaches a ladder
+     * it can climb, so one press is enough and you can press it early.
+     */
     public void up() {
         if (state == State.PLAYING) {
             player.wantVert = -1;
-            player.wantVertSteps = CLIMB_REQUEST_STEPS;
         }
     }
 
-    /** Climbs down if there is a ladder; otherwise stops, and grabs the next ladder down. */
+    /** Asks to climb down: like {@link #up()}, it waits for a ladder going down. */
     public void down() {
-        if (state != State.PLAYING) {
-            return;
+        if (state == State.PLAYING) {
+            player.wantVert = 1;
         }
-        if (player.climbing == 0 && !isLadder(player.x, player.y + 1)) {
-            player.dir = 0;
-        }
-        player.wantVert = 1;
-        player.wantVertSteps = CLIMB_REQUEST_STEPS;
     }
 
-    /** Stops horizontal movement (used when the terminal reports key releases). */
-    public void stopHorizontal(int dir) {
-        if (state == State.PLAYING && player.dir == dir) {
+    /**
+     * Stops running, or stops on the spot partway up or down a ladder, and forgets any climb request.
+     * In mid-air the jump's arc carries on but stops moving sideways.
+     */
+    public void stop() {
+        if (state == State.PLAYING) {
             player.dir = 0;
+            player.climbing = 0;
+            player.wantVert = 0;
+            player.wantJump = false;
+            if (player.jumpStep >= 0) {
+                player.jumpDir = 0;
+            }
         }
     }
 
@@ -90,7 +111,15 @@ public final class Game {
     /** Space/Enter on non-playing screens. */
     public void confirm() {
         switch (state) {
-            case TITLE, GAME_OVER -> newGame();
+            case TITLE -> {
+                if (howToPlayShown) {
+                    newGame();
+                } else {
+                    howToPlayShown = true;
+                    state = State.HOW_TO_PLAY;
+                }
+            }
+            case HOW_TO_PLAY, GAME_OVER -> newGame();
             case PAUSED -> state = State.PLAYING;
             case PLAYING -> jump();
             default -> { }
@@ -108,10 +137,25 @@ public final class Game {
     // ---------------------------------------------------------------- lifecycle
 
     void newGame() {
+        newGameAt(0);
+    }
+
+    /**
+     * Cheat: from the title screen, starts a new game on level {@code number} (1 is the first) instead.
+     * Ignored anywhere else, or if there's no such level.
+     */
+    public void cheatToLevel(int number) {
+        if ((state == State.TITLE || state == State.HOW_TO_PLAY) && number >= 1 && number <= levels.size()) {
+            howToPlayShown = true;
+            newGameAt(number - 1);
+        }
+    }
+
+    private void newGameAt(int index) {
         score = 0;
         lives = STARTING_LIVES;
         loop = 0;
-        startLevel(0);
+        startLevel(index);
     }
 
     void startLevel(int index) {
@@ -190,21 +234,17 @@ public final class Game {
     }
 
     private void spawnBoulders() {
-        if (stateTicks < nextSpawnTick || boulders.size() >= level.maxBoulders() || level.chutes().isEmpty()) {
+        if (stateTicks < nextSpawnTick || boulders.size() >= level.maxBoulders() || level.dispensers().isEmpty()) {
             return;
         }
-        int[] chute = level.chutes().get(random.nextInt(level.chutes().size()));
-        boulders.add(new Boulder(chute[0], chute[1], launchDirection(chute[0], chute[1])));
+        int[] dispenser = level.dispensers().get(random.nextInt(level.dispensers().size()));
+        boulders.add(new Boulder(dispenser[0], dispenser[1], launchDirection(dispenser[0], dispenser[1])));
         int interval = level.spawnInterval();
         nextSpawnTick = stateTicks + interval / 2 + random.nextInt(Math.max(1, interval));
     }
 
     private void stepPlayer() {
         Player p = player;
-        if (p.wantVertSteps > 0 && --p.wantVertSteps == 0) {
-            p.wantVert = 0;
-        }
-
         if (p.jumpStep >= 0) {
             if (!grabLadderInMidAir()) {
                 stepJump();
@@ -272,21 +312,14 @@ public final class Game {
     }
 
     /**
-     * Jumping or falling past a ladder grabs it if up or down was pressed recently, so jumping onto a
-     * ladder is a way to reach ones that don't come down to the floor. The lad can reach one cell ahead,
-     * so the jump doesn't have to pass exactly through the ladder.
+     * Jumping or falling onto a ladder grabs it if up or down has been asked for, so jumping onto a ladder
+     * is a way to reach ones that don't come down to the floor. There's no climbing in mid-air: the lad only
+     * catches a ladder when lined up with it.
      */
     private boolean grabLadderInMidAir() {
         Player p = player;
-        if (p.wantVert == 0) {
+        if (p.wantVert == 0 || !isLadder(p.x, p.y)) {
             return false;
-        }
-        int ahead = p.jumpStep >= 0 ? p.jumpDir : p.dir;
-        if (!isLadder(p.x, p.y)) {
-            if (ahead == 0 || !isLadder(p.x + ahead, p.y) || !canEnter(p.x + ahead, p.y)) {
-                return false;
-            }
-            p.x += ahead;
         }
         p.jumpStep = -1;
         p.jumpDir = 0;
@@ -339,7 +372,7 @@ public final class Game {
         p.jumpStep = 0;
     }
 
-    /** Boulders leave a chute away from the pipe beside it; with no pipe, either way. */
+    /** Boulders leave a dispenser away from the pipe beside it; with no pipe, either way. */
     int launchDirection(int x, int y) {
         boolean pipeLeft = tileAt(x - 1, y) == Tile.WALL;
         boolean pipeRight = tileAt(x + 1, y) == Tile.WALL;
@@ -467,7 +500,6 @@ public final class Game {
         int dir;            // -1 left, 0 still, 1 right
         int climbing;       // -1 up, 0 not climbing, 1 down
         int wantVert;       // pending ladder request
-        int wantVertSteps;
         boolean wantJump;
         int jumpStep = -1;  // index into JUMP_ARC, or -1 when not jumping
         int jumpDir;
@@ -478,7 +510,6 @@ public final class Game {
             dir = 0;
             climbing = 0;
             wantVert = 0;
-            wantVertSteps = 0;
             wantJump = false;
             jumpStep = -1;
             jumpDir = 0;
@@ -490,7 +521,7 @@ public final class Game {
         public boolean isClimbing() { return climbing != 0; }
     }
 
-    /** A boulder rolling out of a chute. */
+    /** A boulder rolling out of a dispenser. */
     public static final class Boulder {
         int x;
         int y;

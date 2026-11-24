@@ -99,7 +99,7 @@ class LevelSolverTest {
 
     private static String key(Game g) {
         Game.Player p = g.player();
-        return p.x + "," + p.y + "," + p.dir + "," + p.climbing + "," + p.wantVert + "," + p.wantVertSteps + ","
+        return p.x + "," + p.y + "," + p.dir + "," + p.climbing + "," + p.wantVert + ","
                 + p.wantJump + "," + p.jumpStep + "," + p.jumpDir;
     }
 

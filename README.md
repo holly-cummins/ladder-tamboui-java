@@ -23,7 +23,7 @@ In ASCII mode you are the lad, `p` or `q` depending on which way you face, or `g
 You walk on platforms `=`, climb ladders `H`, and jump over rolling boulders `o` to collect minor treasures `&` and reach the main treasure `$`.
 Pipes `|` block your way. Spikes `^` and boulders cost a life and restart the level.
 Landing on a trampoline `.` bounces you off in a random direction.
-Boulders pour out of chutes `V` and are swallowed by stars `*`.
+Boulders pour out of dispensers `V` and are swallowed by stars `*`.
 
 In modern mode you are a cyan `▶` or `◀` depending on which way you face, or `☻` when still or climbing.
 Boulders are grey `●`, ladders `╫`, pipes `┃`, spikes `▲`, trampolines `◡`, stars `✺` and the exit `⌂`.
@@ -36,19 +36,24 @@ You start with 4 lads (lives).
 
 | Key | Action |
 | --- | --- |
-| ← → (or A D) | Run. You keep running until you hit something or press another key. |
-| ↑ (or W) | Climb up. Press it early and you grab the next ladder you pass, even in mid-jump. |
-| ↓ | Climb down, or stop if there's no ladder. |
+| ← → (or A D) | Run. You keep running until you hit something or press another key. In mid-air, steers the jump. |
+| ↑ (or W) | Climb up. Press it once, any time before you get there, and you catch the next ladder you reach, even in mid-jump. |
+| ↓ | Climb down: like ↑, it waits for the next ladder going down. |
+| B | Stop, on the floor or partway up or down a ladder. In mid-air, drop straight down. Also cancels a waiting ↑ or ↓. |
 | Space | Jump |
 | P | Pause |
 | S | Switch style (ASCII or modern), on the title screen or mid-game |
 | Q / Esc | Quit |
 
-Most terminals don't report key releases, so running is "press to go", not "hold to go".
-In terminals that support the Kitty keyboard protocol, releasing the key stops you.
+One press is enough: there's no need to hold keys down or mash them, and letting go changes nothing.
+A how-to-play screen says so before your first game.
 
-To get onto a ladder that doesn't reach the floor, jump at it and press ↑ just before or during the jump.
-You can reach one cell ahead, so the jump only has to come close.
+Ladders only catch you when you ask: run or jump past an `H` without pressing ↑ or ↓ and you go straight through.
+Press ↑ or ↓ while running, jumping or just before you land, and the lad catches the next ladder it lines up with.
+A jump follows a fixed arc, but you can steer it with ← → or stop going sideways with B.
+That's how you reach a ladder that doesn't come down to the floor.
+
+Cheat: on the title screen, press a number to start on that level instead of the first.
 
 ## Levels
 
@@ -56,7 +61,7 @@ Levels are plain text files in `src/main/resources/levels/`, listed in order in 
 Each is 60x20 below a short header:
 
 ```
-name: Easy Street
+name: Morning Cup
 time: 90      # seconds on the clock
 boulders: 4    # most boulders at once
 spawn: 60     # average ticks between boulders (20 ticks a second)
@@ -71,7 +76,7 @@ spawn: 60     # average ticks between boulders (20 ticks a second)
 | `\|` | Pipe wall: blocks movement like rock. A one-high pipe is an easy jump; two high needs a perfectly timed running jump. |
 | `&` | Treasure |
 | `E` | Exit lift |
-| `v` | Boulder chute. Boulders roll away from a `\|` pipe beside it, and after that only follow gravity and momentum. |
+| `v` | Boulder dispenser. On a floor, put a `\|` pipe on one side and boulders roll out the other. In mid-air it has no pipe and just drops them. After that boulders only follow gravity and momentum. |
 | `*` | Star that swallows boulders |
 | `^` | Spikes (deadly). Good on top of pipes, or under gaps to punish a fall. |
 | `.` | Trampoline: landing on it bounces you in a random direction. Put them in pairs, either side of a gap in the floor. |

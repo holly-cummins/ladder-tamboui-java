@@ -158,26 +158,96 @@ class GameTest {
     }
 
     @Test
-    void aJumpThatFallsJustShortOfALadderStillGrabsIt() {
+    void anUpPressMadeLongBeforeTheLadderStillCatchesIt() {
         Game g = game(
-                "         H     ",
-                "#########H#####",
-                "         H     ",
-                "         H     ",
-                "         H     ",
-                "@        H     ",
-                "#####    H   ##",
-                "         H     ",
-                "               ",
-                "               ",
-                "###############");
+                "                         H",
+                "#########################H",
+                "                         H",
+                "@                        H",
+                "##########################");
+        g.up(); // pressed once, far from any ladder
         g.right();
-        ticks(g, playerSteps(3)); // take off a cell early: the arc ends beside the ladder
-        assertEquals(3, g.player().x());
+        ticks(g, playerSteps(40));
+        assertEquals(25, g.player().x());
+        assertTrue(g.player().y() < Level.HEIGHT - 2, "caught the ladder and climbed it");
+    }
+
+    @Test
+    void walkingPastALadderWithoutPressingUpGoesStraightThrough() {
+        Game g = game(
+                "   H     ",
+                "###H#####",
+                "   H     ",
+                "@  H    #",
+                "#########");
+        g.right();
+        ticks(g, playerSteps(20));
+        assertEquals(7, g.player().x());
+        assertEquals(Level.HEIGHT - 2, g.player().y());
+    }
+
+    @Test
+    void aDownPressWhileRunningCatchesTheNextLadderDown() {
+        Game g = game(
+                "@     ",
+                "####H#",
+                "    H ",
+                "    H ",
+                "######");
+        g.down(); // no ladder here: doesn't stop you, just waits for one
+        g.right();
+        ticks(g, playerSteps(4));
+        assertEquals(4, g.player().x(), "kept running to the ladder");
+        ticks(g, playerSteps(6));
+        assertEquals(Level.HEIGHT - 2, g.player().y(), "and climbed down it");
+    }
+
+    @Test
+    void jumpsCanBeSteeredOrStoppedInMidAir() {
+        Game g = game(
+                "          @          ",
+                "#####################");
+        int start = g.player().x();
+        g.right();
         g.jump();
-        g.up();
-        ticks(g, playerSteps(7));
-        assertEquals(9, g.player().x(), "reached across and grabbed the ladder");
+        ticks(g, playerSteps(2));
+        assertTrue(g.player().x() > start);
+        g.left(); // turn round in mid-air
+        ticks(g, playerSteps(8));
+        assertTrue(g.player().x() < start, "came back the other way");
+
+        Game h = game(
+                "          @          ",
+                "#####################");
+        h.right();
+        h.jump();
+        ticks(h, playerSteps(2));
+        int x = h.player().x();
+        h.stop(); // drop straight down from here
+        ticks(h, playerSteps(8));
+        assertEquals(x, h.player().x());
+        assertEquals(Level.HEIGHT - 2, h.player().y());
+    }
+
+    @Test
+    void cheatStartsOnALaterLevelFromTheTitleOnly() {
+        Game g = new Game(Level.loadAll(), new Random(1));
+        g.cheatToLevel(99); // no such level
+        assertEquals(Game.State.TITLE, g.state());
+        g.cheatToLevel(2);
+        assertEquals(Game.State.PLAYING, g.state());
+        assertEquals(2, g.levelNumber());
+        g.cheatToLevel(3); // not mid-game
+        assertEquals(2, g.levelNumber());
+    }
+
+    @Test
+    void howToPlayIsShownBeforeTheFirstGameOnly() {
+        Game g = new Game(Level.loadAll(), new Random(1));
+        assertEquals(Game.State.TITLE, g.state());
+        g.confirm();
+        assertEquals(Game.State.HOW_TO_PLAY, g.state());
+        g.confirm();
         assertEquals(Game.State.PLAYING, g.state());
     }
 
@@ -194,6 +264,31 @@ class GameTest {
         ticks(g, playerSteps(8));
         assertEquals(Level.HEIGHT - 4, g.player().y(), "still on the same floor");
         assertTrue(g.player().x() > 4);
+    }
+
+    @Test
+    void stopHaltsRunningAndClimbing() {
+        Game g = game(
+                "     H",
+                "     H",
+                "@    H",
+                "######");
+        g.right();
+        ticks(g, playerSteps(2));
+        g.stop();
+        ticks(g, playerSteps(5));
+        assertEquals(2, g.player().x(), "stopped running");
+
+        g.right();
+        ticks(g, playerSteps(3));
+        assertEquals(5, g.player().x());
+        g.up();
+        ticks(g, playerSteps(1));
+        int y = g.player().y();
+        g.stop();
+        ticks(g, playerSteps(5));
+        assertEquals(y, g.player().y(), "hangs on the ladder where it stopped");
+        assertEquals(Game.State.PLAYING, g.state());
     }
 
     @Test
@@ -306,7 +401,16 @@ class GameTest {
         List<Level> levels = Level.loadAll();
         assertTrue(!levels.isEmpty());
         for (Level level : levels) {
-            assertTrue(!level.chutes().isEmpty(), level.name() + " has a boulder chute");
+            assertTrue(!level.dispensers().isEmpty(), level.name() + " has a boulder dispenser");
+            Tile[][] tiles = level.copyTiles();
+            for (int[] d : level.dispensers()) {
+                int x = d[0], y = d[1];
+                boolean inTheAir = y + 1 < Level.HEIGHT && tiles[y + 1][x] == Tile.EMPTY;
+                boolean pipeBeside = (x > 0 && tiles[y][x - 1] == Tile.WALL)
+                        || (x + 1 < Level.WIDTH && tiles[y][x + 1] == Tile.WALL);
+                assertTrue(!(inTheAir && pipeBeside),
+                        level.name() + ": the dispenser at " + x + "," + y + " is in mid-air, so has no pipe beside it");
+            }
         }
     }
 }

@@ -20,8 +20,9 @@ import java.util.Map;
  *   #  rock floor / wall        H  ladder
  *   |  pipe wall (solid)
  *   &  treasure                 E  exit lift
- *   v  boulder chute (spawner)     *  star that swallows boulders
- *          (boulders roll away from a | pipe beside the chute)
+ *   v  boulder dispenser         *  star that swallows boulders
+ *          (boulders roll away from a | pipe beside a dispenser on the floor;
+ *           a dispenser in mid-air has no pipe and just drops them)
  *   ^  spikes (deadly)          .  trampoline
  *   @  player start             [  left end of the sign showing the level name
  *                                  (it hangs on chains from whatever is above)
@@ -39,7 +40,7 @@ public final class Level {
     private final int maxBoulders;
     private final int spawnInterval;
     private final Tile[][] tiles;
-    private final List<int[]> chutes = new ArrayList<>();
+    private final List<int[]> dispensers = new ArrayList<>();
     private final int startX;
     private final int startY;
     private final int signX;
@@ -58,8 +59,8 @@ public final class Level {
         this.signY = signY;
         for (int y = 0; y < HEIGHT; y++) {
             for (int x = 0; x < WIDTH; x++) {
-                if (tiles[y][x] == Tile.CHUTE) {
-                    chutes.add(new int[] {x, y});
+                if (tiles[y][x] == Tile.DISPENSER) {
+                    dispensers.add(new int[] {x, y});
                 }
             }
         }
@@ -151,7 +152,7 @@ public final class Level {
     public int timeLimit() { return timeLimit; }
     public int maxBoulders() { return maxBoulders; }
     public int spawnInterval() { return spawnInterval; }
-    public List<int[]> chutes() { return chutes; }
+    public List<int[]> dispensers() { return dispensers; }
     public int startX() { return startX; }
     public int startY() { return startY; }
 }

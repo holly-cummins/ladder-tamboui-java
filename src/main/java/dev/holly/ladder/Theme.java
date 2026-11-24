@@ -60,6 +60,19 @@ public interface Theme {
 
     String helpText(Game game);
 
+    /** How the keys are written on the how-to-play screen: left/right, up/down and jump. */
+    default String leftRightKeys() {
+        return "← →";
+    }
+
+    default String upDownKeys() {
+        return "↑ ↓";
+    }
+
+    default String jumpKey() {
+        return "space";
+    }
+
     /** The big title for the splash screen; may animate with the game clock. */
     List<Line> titleArt(long ticks);
 

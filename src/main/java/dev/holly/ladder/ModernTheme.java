@@ -26,7 +26,7 @@ public final class ModernTheme implements Theme {
     private static final Style BASE = Style.EMPTY.bg(CAVERN);
     private static final Style LADDER = BASE.fg(Color.rgb(226, 190, 96));
     private static final Style EXIT = BASE.fg(Color.rgb(120, 230, 140)).bold();
-    private static final Style CHUTE = BASE.fg(Color.rgb(140, 140, 150));
+    private static final Style DISPENSER = BASE.fg(Color.rgb(140, 140, 150));
     private static final Style PIT = BASE.fg(Color.rgb(80, 74, 70));
     private static final Style PIPE = BASE.fg(Color.rgb(140, 160, 178)).bold();
     private static final Style SPIKES = BASE.fg(Color.rgb(200, 208, 222)).bold();
@@ -56,7 +56,7 @@ public final class ModernTheme implements Theme {
             case LADDER -> new Cell("╫", LADDER);
             case TREASURE -> new Cell("◆", BASE.fg(shimmer(t, x, y)).bold());
             case EXIT -> new Cell("⌂", EXIT);
-            case CHUTE -> new Cell("▼", CHUTE);
+            case DISPENSER -> new Cell("▼", DISPENSER);
             case PIT -> new Cell("✺", BASE.fg(lerp(new int[]{150, 90, 255}, new int[]{230, 170, 255},
                     (Math.sin((t + x * 7) / 5.0) + 1) / 2)).bold());
             case SPIKES -> new Cell("▲", SPIKES);
@@ -189,7 +189,8 @@ public final class ModernTheme implements Theme {
             case TITLE -> " ␣ start   s ←→ style   q quit";
             case GAME_OVER -> " ␣ start   q quit";
             case PAUSED -> " p or ␣ resume   q quit";
-            default -> " ←→ run  ↑↓ climb  ␣ jump  s style  p pause  q quit";
+            case HOW_TO_PLAY -> " any key starts   q quit";
+            default -> " ←→ run  ↑↓ climb  ␣ jump  b stop  s style  p pause  q quit";
         };
     }
 

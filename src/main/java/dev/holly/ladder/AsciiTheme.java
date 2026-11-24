@@ -44,7 +44,7 @@ public final class AsciiTheme implements Theme {
             case LADDER -> new Cell("H", GREEN);
             case TREASURE -> new Cell("&", GREEN);
             case EXIT -> new Cell("$", GREEN);
-            case CHUTE -> new Cell("V", GREEN);
+            case DISPENSER -> new Cell("V", GREEN);
             case PIT -> new Cell("*", GREEN);
             case SPIKES -> new Cell("^", GREEN);
             case WALL -> new Cell("|", GREEN);
@@ -60,7 +60,7 @@ public final class AsciiTheme implements Theme {
 
     @Override
     public Cell[] sign(String name) {
-        String text = "[ " + name + " ]";
+        String text = name;
         Cell[] cells = new Cell[text.length()];
         for (int i = 0; i < cells.length; i++) {
             cells[i] = new Cell(String.valueOf(text.charAt(i)), GREEN);
@@ -118,10 +118,21 @@ public final class AsciiTheme implements Theme {
     public String helpText(Game game) {
         return switch (game.state()) {
             case TITLE -> " space: start   s or left/right: style   q: quit";
+            case HOW_TO_PLAY -> " any key: start    q: quit";
             case GAME_OVER -> " space: start    q: quit";
             case PAUSED -> " p or space: resume    q: quit";
-            default -> " arrows move  space jump  s style  p pause  q quit";
+            default -> " arrows move  space jump  b stop  s style  p pause  q quit";
         };
+    }
+
+    @Override
+    public String leftRightKeys() {
+        return "<- ->";
+    }
+
+    @Override
+    public String upDownKeys() {
+        return "up dn";
     }
 
     @Override

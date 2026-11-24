@@ -7,7 +7,7 @@ public enum Tile {
     LADDER,
     TREASURE,
     EXIT,
-    CHUTE,
+    DISPENSER,
     PIT,
     SPIKES,
     WALL,
@@ -20,7 +20,7 @@ public enum Tile {
             case '|' -> WALL;
             case '&' -> TREASURE;
             case 'E' -> EXIT;
-            case 'v' -> CHUTE;
+            case 'v' -> DISPENSER;
             case '*' -> PIT;
             case '^' -> SPIKES;
             case '.' -> TRAMPOLINE;

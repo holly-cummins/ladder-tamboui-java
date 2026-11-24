@@ -85,16 +85,20 @@ public final class Main {
                 return false;
             }
             if (key.isRelease()) {
-                // Only terminals speaking the Kitty keyboard protocol send these.
-                if (isLeft(key)) {
-                    game.stopHorizontal(-1);
-                } else if (isRight(key)) {
-                    game.stopHorizontal(1);
-                }
-                return false;
+                return false; // one press is enough: letting go of a key changes nothing
             }
             if (key.isCharIgnoreCase('s')) {
                 renderer.cycleTheme(1);
+                return true;
+            }
+            for (char c = '1'; c <= '9'; c++) {
+                if (key.isChar(c) && (game.state() == Game.State.TITLE || game.state() == Game.State.HOW_TO_PLAY)) {
+                    game.cheatToLevel(c - '0'); // cheat: start on a later level
+                    return true;
+                }
+            }
+            if (game.state() == Game.State.HOW_TO_PLAY) {
+                game.confirm(); // any key starts the game
                 return true;
             }
             if (game.state() == Game.State.TITLE) {
@@ -115,6 +119,8 @@ public final class Main {
                 game.up();
             } else if (key.isKey(KeyCode.DOWN)) {
                 game.down();
+            } else if (key.isCharIgnoreCase('b')) {
+                game.stop();
             } else if (key.isChar(' ') || key.isKey(KeyCode.ENTER)) {
                 game.confirm();
             } else if (key.isCharIgnoreCase('p')) {
