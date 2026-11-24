@@ -65,7 +65,7 @@ public final class Renderer {
         Block block = frameBuilder.build();
 
         if (game.state() == Game.State.TITLE) {
-            frame.renderWidget(Paragraph.builder().text(titleText()).block(block).centered().build(), rows.get(1));
+            frame.renderWidget(Paragraph.builder().text(titleText(game)).block(block).centered().build(), rows.get(1));
         } else {
             frame.renderWidget(Paragraph.builder().text(field(game)).block(block).build(), rows.get(1));
             String banner = banner(game);
@@ -100,25 +100,46 @@ public final class Renderer {
                 .build(), r);
     }
 
-    private Text titleText() {
+    private Text titleText(Game game) {
         List<Line> lines = new ArrayList<>();
         lines.add(Line.empty());
-        lines.add(Line.from(Span.styled(theme.titleBanner(), theme.value())));
+        lines.addAll(theme.titleArt(game.ticks()));
         lines.add(Line.empty());
         for (String s : theme.blurb()) {
             lines.add(Line.styled(s, theme.plain()));
         }
         lines.add(Line.empty());
-        for (Theme.LegendEntry e : theme.legend()) {
-            lines.add(Line.from(
-                    Span.styled(e.cell().glyph(), e.cell().style()),
-                    Span.styled("  " + String.format("%-30s", e.meaning()), theme.label())));
-        }
+        lines.addAll(legend());
         lines.add(Line.empty());
         lines.add(styleSwitcher());
         lines.add(Line.empty());
         lines.add(Line.styled("Press space to start", theme.accent()));
         return Text.from(lines);
+    }
+
+    /** The key to the map, in two columns so the big title fits. */
+    private List<Line> legend() {
+        List<Theme.LegendEntry> entries = theme.legend();
+        int width = 0;
+        for (Theme.LegendEntry e : entries) {
+            width = Math.max(width, e.meaning().length());
+        }
+        String format = "%-" + width + "s";
+        int half = (entries.size() + 1) / 2;
+        List<Line> lines = new ArrayList<>();
+        for (int i = 0; i < half; i++) {
+            List<Span> spans = new ArrayList<>();
+            for (int j : new int[]{i, i + half}) {
+                if (j > i) {
+                    spans.add(Span.styled("  ", theme.label()));
+                }
+                Theme.LegendEntry e = j < entries.size() ? entries.get(j) : null;
+                spans.add(e == null ? Span.styled(" ", theme.label()) : Span.styled(e.cell().glyph(), e.cell().style()));
+                spans.add(Span.styled(" " + String.format(format, e == null ? "" : e.meaning()), theme.label()));
+            }
+            lines.add(Line.from(spans));
+        }
+        return lines;
     }
 
     /** Shows every style with the current one bracketed, e.g. {@code Style: [ascii]  modern}. */

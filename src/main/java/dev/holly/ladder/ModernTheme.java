@@ -162,8 +162,55 @@ public final class ModernTheme implements Theme {
     }
 
     @Override
-    public String titleBanner() {
-        return "L A D D E R";
+    public List<Line> titleArt(long ticks) {
+        // Two pixels per cell: pixel rows 0-9 are letters, 10 is the shadow's last row, 11 the ledge.
+        int rows = (Banner.PIXEL_HEIGHT + 2) / 2;
+        int climber = rows - 1 - (int) ((ticks / 5) % (rows + 3)); // climbs up, then off the top
+        List<Line> lines = new ArrayList<>();
+        for (int r = 0; r < rows; r++) {
+            List<Span> spans = new ArrayList<>();
+            ladderRung(spans, r == climber);
+            spans.add(Span.styled("  ", BASE));
+            for (int x = 0; x <= Banner.PIXEL_WIDTH; x++) {
+                Color top = titlePixel(x, 2 * r, ticks);
+                Color bottom = titlePixel(x, 2 * r + 1, ticks);
+                spans.add(top == CAVERN && bottom == CAVERN
+                        ? Span.styled(" ", BASE)
+                        : Span.styled("▀", Style.EMPTY.fg(top).bg(bottom)));
+            }
+            spans.add(Span.styled("  ", BASE));
+            ladderRung(spans, false);
+            lines.add(Line.from(spans));
+        }
+        return lines;
+    }
+
+    private static void ladderRung(List<Span> spans, boolean withClimber) {
+        spans.add(Span.styled("╟", LADDER));
+        spans.add(withClimber ? Span.styled("☻", PLAYER) : Span.styled("─", LADDER));
+        spans.add(Span.styled("╢", LADDER));
+    }
+
+    /**
+     * One pixel of the title: gold-to-copper letters with a glint that sweeps across every few seconds,
+     * a drop shadow, and a lit rock ledge for the letters to stand on.
+     */
+    private static Color titlePixel(int x, int y, long ticks) {
+        if (Banner.pixel(x, y)) {
+            int[] colour = mix(new int[]{255, 234, 150}, new int[]{205, 98, 38}, y / (double) (Banner.PIXEL_HEIGHT - 1));
+            int distance = Math.abs(x - y / 2 - ((int) (ticks % 100) - 20));
+            if (distance <= 2) {
+                colour = mix(colour, new int[]{255, 255, 255}, (3 - distance) * 0.25);
+            }
+            return Color.rgb(colour[0], colour[1], colour[2]);
+        }
+        if (Banner.pixel(x - 1, y - 1)) {
+            return Color.rgb(70, 40, 24);
+        }
+        if (y == Banner.PIXEL_HEIGHT + 1) {
+            return ROCK_TOP;
+        }
+        return CAVERN;
     }
 
     @Override

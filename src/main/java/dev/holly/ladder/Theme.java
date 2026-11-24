@@ -53,7 +53,8 @@ public interface Theme {
 
     String helpText(Game game);
 
-    String titleBanner();
+    /** The big title for the splash screen; may animate with the game clock. */
+    List<Line> titleArt(long ticks);
 
     List<String> blurb();
 

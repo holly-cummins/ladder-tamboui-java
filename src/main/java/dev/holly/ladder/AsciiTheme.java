@@ -1,5 +1,6 @@
 package dev.holly.ladder;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import dev.tamboui.style.Color;
@@ -109,8 +110,12 @@ public final class AsciiTheme implements Theme {
     }
 
     @Override
-    public String titleBanner() {
-        return "L A D D E R";
+    public List<Line> titleArt(long ticks) {
+        List<Line> lines = new ArrayList<>();
+        for (int r = 0; r < Banner.HEIGHT; r++) {
+            lines.add(Line.styled(Banner.row(r), GREEN));
+        }
+        return lines;
     }
 
     @Override
@@ -123,7 +128,7 @@ public final class AsciiTheme implements Theme {
     @Override
     public List<LegendEntry> legend() {
         return List.of(
-                new LegendEntry(new Cell("p", GREEN), "you (q facing left, g still)"),
+                new LegendEntry(new Cell("p", GREEN), "you (q left, g still)"),
                 new LegendEntry(new Cell("=", GREEN), "platform"),
                 new LegendEntry(new Cell("H", GREEN), "ladder"),
                 new LegendEntry(new Cell("o", GREEN), "boulder"),
