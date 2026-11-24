@@ -20,7 +20,7 @@ public final class Game {
     static final int STARTING_LIVES = 4;
     static final int CLIMB_REQUEST_STEPS = 12;   // how long an up/down request waits for a ladder
     static final int[] JUMP_ARC = {-1, -1, 0, 1, 1};
-    static final int GEM_POINTS = 100;
+    static final int TREASURE_POINTS = 100;
     static final int TIME_BONUS_PER_SECOND = 10;
 
     private static final int DYING_TICKS = 30;
@@ -35,7 +35,7 @@ public final class Game {
     private Level level;
     private Tile[][] tiles;
     private final Player player = new Player();
-    private final List<Cart> carts = new ArrayList<>();
+    private final List<Boulder> boulders = new ArrayList<>();
 
     private long ticks;
     private int stateTicks;
@@ -123,7 +123,7 @@ public final class Game {
 
     private void respawn() {
         player.reset(level.startX(), level.startY());
-        carts.clear();
+        boulders.clear();
         timeLeftTicks = level.timeLimit() * TICKS_PER_SECOND;
         nextSpawnTick = 0;
         stateTicks = 0;
@@ -168,33 +168,33 @@ public final class Game {
             die();
             return;
         }
-        spawnCarts();
+        spawnBoulders();
         if (stateTicks % PLAYER_PERIOD == 0) {
             int yBefore = player.y;
             stepPlayer();
             if (player.y > yBefore) {
                 bounceOffTrampoline();
             }
-            if (checkPlayerCell() || hitByCart()) {
+            if (checkPlayerCell() || hitByBoulder()) {
                 return;
             }
         }
-        if (stateTicks % cartPeriod() == 0) {
-            stepCarts();
-            hitByCart();
+        if (stateTicks % boulderPeriod() == 0) {
+            stepBoulders();
+            hitByBoulder();
         }
     }
 
-    int cartPeriod() {
+    int boulderPeriod() {
         return Math.max(1, 3 - loop);
     }
 
-    private void spawnCarts() {
-        if (stateTicks < nextSpawnTick || carts.size() >= level.maxCarts() || level.chutes().isEmpty()) {
+    private void spawnBoulders() {
+        if (stateTicks < nextSpawnTick || boulders.size() >= level.maxBoulders() || level.chutes().isEmpty()) {
             return;
         }
         int[] chute = level.chutes().get(random.nextInt(level.chutes().size()));
-        carts.add(new Cart(chute[0], chute[1], launchDirection(chute[0], chute[1])));
+        boulders.add(new Boulder(chute[0], chute[1], launchDirection(chute[0], chute[1])));
         int interval = level.spawnInterval();
         nextSpawnTick = stateTicks + interval / 2 + random.nextInt(Math.max(1, interval));
     }
@@ -273,12 +273,20 @@ public final class Game {
 
     /**
      * Jumping or falling past a ladder grabs it if up or down was pressed recently, so jumping onto a
-     * ladder is a way to reach ones that don't come down to the floor.
+     * ladder is a way to reach ones that don't come down to the floor. The lad can reach one cell ahead,
+     * so the jump doesn't have to pass exactly through the ladder.
      */
     private boolean grabLadderInMidAir() {
         Player p = player;
-        if (p.wantVert == 0 || !isLadder(p.x, p.y)) {
+        if (p.wantVert == 0) {
             return false;
+        }
+        int ahead = p.jumpStep >= 0 ? p.jumpDir : p.dir;
+        if (!isLadder(p.x, p.y)) {
+            if (ahead == 0 || !isLadder(p.x + ahead, p.y) || !canEnter(p.x + ahead, p.y)) {
+                return false;
+            }
+            p.x += ahead;
         }
         p.jumpStep = -1;
         p.jumpDir = 0;
@@ -331,7 +339,7 @@ public final class Game {
         p.jumpStep = 0;
     }
 
-    /** Barrels leave a chute away from the pipe beside it; with no pipe, either way. */
+    /** Boulders leave a chute away from the pipe beside it; with no pipe, either way. */
     int launchDirection(int x, int y) {
         boolean pipeLeft = tileAt(x - 1, y) == Tile.WALL;
         boolean pipeRight = tileAt(x + 1, y) == Tile.WALL;
@@ -341,10 +349,10 @@ public final class Game {
         return random.nextBoolean() ? 1 : -1;
     }
 
-    /** Barrels only obey gravity and momentum: they fall, keep rolling the same way, and bounce off walls. */
-    private void stepCarts() {
-        for (Iterator<Cart> it = carts.iterator(); it.hasNext(); ) {
-            Cart c = it.next();
+    /** Boulders only obey gravity and momentum: they fall, keep rolling the same way, and bounce off walls. */
+    private void stepBoulders() {
+        for (Iterator<Boulder> it = boulders.iterator(); it.hasNext(); ) {
+            Boulder c = it.next();
             if (!isSupported(c.x, c.y)) {
                 c.y++;
             } else if (canEnter(c.x + c.dir, c.y)) {
@@ -362,9 +370,9 @@ public final class Game {
     private boolean checkPlayerCell() {
         Tile t = tileAt(player.x, player.y);
         switch (t) {
-            case GEM -> {
+            case TREASURE -> {
                 tiles[player.y][player.x] = Tile.EMPTY;
-                score += GEM_POINTS;
+                score += TREASURE_POINTS;
             }
             case SPIKES -> {
                 die();
@@ -386,11 +394,11 @@ public final class Game {
         return false;
     }
 
-    private boolean hitByCart() {
+    private boolean hitByBoulder() {
         if (state != State.PLAYING) {
             return false;
         }
-        for (Cart c : carts) {
+        for (Boulder c : boulders) {
             if (c.x == player.x && c.y == player.y) {
                 die();
                 return true;
@@ -443,7 +451,7 @@ public final class Game {
     public int levelNumber() { return loop * levels.size() + levelIndex + 1; }
     public Tile tile(int x, int y) { return tileAt(x, y); }
     public Player player() { return player; }
-    public List<Cart> carts() { return carts; }
+    public List<Boulder> boulders() { return boulders; }
     public int score() { return score; }
     public int lives() { return lives; }
     public int highScore() { return highScore; }
@@ -482,13 +490,13 @@ public final class Game {
         public boolean isClimbing() { return climbing != 0; }
     }
 
-    /** A runaway ore cart. */
-    public static final class Cart {
+    /** A boulder rolling out of a chute. */
+    public static final class Boulder {
         int x;
         int y;
         int dir;
 
-        Cart(int x, int y, int dir) {
+        Boulder(int x, int y, int dir) {
             this.x = x;
             this.y = y;
             this.dir = dir;

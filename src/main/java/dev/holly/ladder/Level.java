@@ -19,9 +19,9 @@ import java.util.Map;
  * <pre>
  *   #  rock floor / wall        H  ladder
  *   |  pipe wall (solid)
- *   &  gem                      E  exit lift
- *   v  cart chute (spawner)     *  star that swallows carts
- *          (carts roll away from a | pipe beside the chute)
+ *   &  treasure                 E  exit lift
+ *   v  boulder chute (spawner)     *  star that swallows boulders
+ *          (boulders roll away from a | pipe beside the chute)
  *   ^  spikes (deadly)          .  trampoline
  *   @  player start             [  left end of the sign showing the level name
  *                                  (it hangs on chains from whatever is above)
@@ -36,7 +36,7 @@ public final class Level {
 
     private final String name;
     private final int timeLimit;
-    private final int maxCarts;
+    private final int maxBoulders;
     private final int spawnInterval;
     private final Tile[][] tiles;
     private final List<int[]> chutes = new ArrayList<>();
@@ -45,11 +45,11 @@ public final class Level {
     private final int signX;
     private final int signY;
 
-    private Level(String name, int timeLimit, int maxCarts, int spawnInterval, Tile[][] tiles, int startX, int startY,
+    private Level(String name, int timeLimit, int maxBoulders, int spawnInterval, Tile[][] tiles, int startX, int startY,
             int signX, int signY) {
         this.name = name;
         this.timeLimit = timeLimit;
-        this.maxCarts = maxCarts;
+        this.maxBoulders = maxBoulders;
         this.spawnInterval = spawnInterval;
         this.tiles = tiles;
         this.startX = startX;
@@ -116,7 +116,7 @@ public final class Level {
         return new Level(
                 header.getOrDefault("name", "Unnamed"),
                 Integer.parseInt(header.getOrDefault("time", "90")),
-                Integer.parseInt(header.getOrDefault("carts", "4")),
+                Integer.parseInt(header.getOrDefault("boulders", "4")),
                 Integer.parseInt(header.getOrDefault("spawn", "60")),
                 tiles, sx, sy, signX, signY);
     }
@@ -133,7 +133,7 @@ public final class Level {
         }
     }
 
-    /** A fresh, mutable copy of the tile grid, so gems can be collected without changing the level. */
+    /** A fresh, mutable copy of the tile grid, so treasure can be collected without changing the level. */
     public Tile[][] copyTiles() {
         Tile[][] copy = new Tile[HEIGHT][];
         for (int y = 0; y < HEIGHT; y++) {
@@ -149,7 +149,7 @@ public final class Level {
     public int signX() { return signX; }
     public int signY() { return signY; }
     public int timeLimit() { return timeLimit; }
-    public int maxCarts() { return maxCarts; }
+    public int maxBoulders() { return maxBoulders; }
     public int spawnInterval() { return spawnInterval; }
     public List<int[]> chutes() { return chutes; }
     public int startX() { return startX; }

@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Proves every shipped level can be finished: a breadth-first search over the player's inputs, one input
- * per player step, with carts switched off. Nodes are replayed from the start, so the search uses the real
+ * per player step, with boulders switched off. Nodes are replayed from the start, so the search uses the real
  * game rules rather than a model of them.
  */
 class LevelSolverTest {
@@ -35,7 +35,7 @@ class LevelSolverTest {
             }
             List<String> level = new ArrayList<>();
             for (String line : lines("levels/" + file.strip())) {
-                level.add(line.startsWith("carts:") ? "carts: 0" : line);
+                level.add(line.startsWith("boulders:") ? "boulders: 0" : line);
             }
             Level parsed = Level.parse(level);
             assertTrue(solvable(parsed), parsed.name() + " (" + file.strip() + ") cannot be finished");

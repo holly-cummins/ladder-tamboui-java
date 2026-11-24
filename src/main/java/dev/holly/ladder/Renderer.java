@@ -160,9 +160,9 @@ public final class Renderer {
                 cells[x] = theme.tile(game, x, y);
             }
             drawSign(game, cells, y);
-            for (Game.Cart c : game.carts()) {
+            for (Game.Boulder c : game.boulders()) {
                 if (c.y() == y && c.x() >= 0 && c.x() < Level.WIDTH) {
-                    cells[c.x()] = theme.cart(game, c);
+                    cells[c.x()] = theme.boulder(game, c);
                 }
             }
             Game.Player p = game.player();

@@ -24,7 +24,7 @@ public interface Theme {
     /** The static map contents at (x, y). */
     Cell tile(Game game, int x, int y);
 
-    Cell cart(Game game, Game.Cart cart);
+    Cell boulder(Game game, Game.Boulder boulder);
 
     /** The level-name sign, one cell per column; its two ends hang from {@link #chain()}s. */
     Cell[] sign(String name);

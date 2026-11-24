@@ -12,7 +12,7 @@ import dev.tamboui.widgets.block.BorderType;
 import dev.tamboui.widgets.block.Borders;
 
 /**
- * 24-bit colour, Unicode glyphs, textured rock, shimmering gems and an air gauge. Needs a terminal with
+ * 24-bit colour, Unicode glyphs, textured rock, shimmering treasure and an air gauge. Needs a terminal with
  * truecolor and a font that has box-drawing and geometric shapes.
  */
 public final class ModernTheme implements Theme {
@@ -31,8 +31,8 @@ public final class ModernTheme implements Theme {
     private static final Style PIPE = BASE.fg(Color.rgb(140, 160, 178)).bold();
     private static final Style SPIKES = BASE.fg(Color.rgb(200, 208, 222)).bold();
     private static final Style TRAMPOLINE = BASE.fg(Color.rgb(255, 120, 200)).bold();
-    private static final Style CART = BASE.fg(Color.rgb(255, 96, 64)).bold();
-    private static final Style PLAYER = BASE.fg(Color.rgb(255, 255, 255)).bold();
+    private static final Style BOULDER = BASE.fg(Color.rgb(168, 168, 172)).bold();
+    private static final Style PLAYER = BASE.fg(Color.rgb(90, 240, 255)).bold();
     private static final Style LABEL = Style.EMPTY.fg(Color.rgb(150, 140, 130));
     private static final Style VALUE = Style.EMPTY.fg(Color.rgb(255, 214, 102)).bold();
     private static final Style HEART = Style.EMPTY.fg(Color.rgb(255, 90, 110));
@@ -54,7 +54,7 @@ public final class ModernTheme implements Theme {
         return switch (game.tile(x, y)) {
             case ROCK -> rock(game, x, y);
             case LADDER -> new Cell("╫", LADDER);
-            case GEM -> new Cell("◆", BASE.fg(shimmer(t, x, y)).bold());
+            case TREASURE -> new Cell("◆", BASE.fg(shimmer(t, x, y)).bold());
             case EXIT -> new Cell("⌂", EXIT);
             case CHUTE -> new Cell("▼", CHUTE);
             case PIT -> new Cell("✺", BASE.fg(lerp(new int[]{150, 90, 255}, new int[]{230, 170, 255},
@@ -82,8 +82,8 @@ public final class ModernTheme implements Theme {
     }
 
     @Override
-    public Cell cart(Game game, Game.Cart cart) {
-        return new Cell("●", CART);
+    public Cell boulder(Game game, Game.Boulder boulder) {
+        return new Cell("●", BOULDER);
     }
 
     /** A wooden plaque with rounded ends and cream lettering. */
@@ -113,7 +113,13 @@ public final class ModernTheme implements Theme {
             boolean flicker = (game.ticks() / 4) % 2 == 0;
             return new Cell(flicker ? "✶" : "☻", BASE.fg(flicker ? Color.rgb(255, 170, 60) : Color.rgb(255, 60, 60)).bold());
         }
-        return new Cell("☻", PLAYER);
+        Game.Player p = game.player();
+        String glyph = p.isClimbing() ? "☻" : switch (p.facing()) {
+            case 1 -> "▶";
+            case -1 -> "◀";
+            default -> "☻";
+        };
+        return new Cell(glyph, PLAYER);
     }
 
     @Override
@@ -242,18 +248,18 @@ public final class ModernTheme implements Theme {
     @Override
     public List<String> blurb() {
         return List.of(
-                "Climb out of the mine before your air runs out.",
-                "Dodge the runaway ore carts. Grab gems on the way.");
+                "Reach the treasure before your air runs out.",
+                "Jump the rolling boulders. Grab the treasure on the way.");
     }
 
     @Override
     public List<LegendEntry> legend() {
         return List.of(
-                new LegendEntry(new Cell("☻", PLAYER), "you"),
-                new LegendEntry(new Cell("●", CART), "runaway cart"),
-                new LegendEntry(new Cell("◆", BASE.fg(Color.rgb(120, 220, 255)).bold()), "gem, " + Game.GEM_POINTS + " points"),
+                new LegendEntry(new Cell("▶", PLAYER), "you (◀ left, ☻ still)"),
+                new LegendEntry(new Cell("●", BOULDER), "boulder"),
+                new LegendEntry(new Cell("◆", BASE.fg(Color.rgb(120, 220, 255)).bold()), "treasure, " + Game.TREASURE_POINTS + " points"),
                 new LegendEntry(new Cell("┃", PIPE), "pipe, blocks your way"),
-                new LegendEntry(new Cell("✺", BASE.fg(Color.rgb(190, 130, 255)).bold()), "star, swallows carts"),
+                new LegendEntry(new Cell("✺", BASE.fg(Color.rgb(190, 130, 255)).bold()), "star, swallows boulders"),
                 new LegendEntry(new Cell("▲", SPIKES), "spikes, deadly"),
                 new LegendEntry(new Cell("◡", TRAMPOLINE), "trampoline, bounces you"),
                 new LegendEntry(new Cell("⌂", EXIT), "lift to the next level"),

@@ -1,6 +1,6 @@
 name: Easy Street
 time: 90
-carts: 4
+boulders: 4
 spawn: 60
 ---
 

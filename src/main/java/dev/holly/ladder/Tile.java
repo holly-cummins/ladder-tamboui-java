@@ -5,7 +5,7 @@ public enum Tile {
     EMPTY,
     ROCK,
     LADDER,
-    GEM,
+    TREASURE,
     EXIT,
     CHUTE,
     PIT,
@@ -18,7 +18,7 @@ public enum Tile {
             case '#' -> ROCK;
             case 'H' -> LADDER;
             case '|' -> WALL;
-            case '&' -> GEM;
+            case '&' -> TREASURE;
             case 'E' -> EXIT;
             case 'v' -> CHUTE;
             case '*' -> PIT;

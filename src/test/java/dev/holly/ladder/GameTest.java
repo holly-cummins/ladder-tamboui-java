@@ -13,7 +13,7 @@ class GameTest {
 
     /** Builds a game from map rows; the rows are placed at the bottom of the 20-row map. */
     private static Game game(String... rows) {
-        List<String> lines = new ArrayList<>(List.of("name: Test", "time: 60", "carts: 0", "spawn: 1000", "---"));
+        List<String> lines = new ArrayList<>(List.of("name: Test", "time: 60", "boulders: 0", "spawn: 1000", "---"));
         for (int i = 0; i < Level.HEIGHT - rows.length; i++) {
             lines.add("");
         }
@@ -107,14 +107,14 @@ class GameTest {
     }
 
     @Test
-    void gemsScoreAndTheExitEndsTheLevel() {
+    void treasureScoresAndTheExitEndsTheLevel() {
         Game g = game(
                 "@ & E",
                 "#####");
         g.right();
         ticks(g, playerSteps(4));
         assertEquals(Game.State.LEVEL_DONE, g.state());
-        assertTrue(g.score() >= Game.GEM_POINTS + 50 * Game.TIME_BONUS_PER_SECOND);
+        assertTrue(g.score() >= Game.TREASURE_POINTS + 50 * Game.TIME_BONUS_PER_SECOND);
     }
 
     @Test
@@ -154,6 +154,30 @@ class GameTest {
         ticks(g, playerSteps(6));
         assertEquals(9, g.player().x(), "grabbed the ladder");
         assertTrue(g.player().y() < standing, "and climbed it");
+        assertEquals(Game.State.PLAYING, g.state());
+    }
+
+    @Test
+    void aJumpThatFallsJustShortOfALadderStillGrabsIt() {
+        Game g = game(
+                "         H     ",
+                "#########H#####",
+                "         H     ",
+                "         H     ",
+                "         H     ",
+                "@        H     ",
+                "#####    H   ##",
+                "         H     ",
+                "               ",
+                "               ",
+                "###############");
+        g.right();
+        ticks(g, playerSteps(3)); // take off a cell early: the arc ends beside the ladder
+        assertEquals(3, g.player().x());
+        g.jump();
+        g.up();
+        ticks(g, playerSteps(7));
+        assertEquals(9, g.player().x(), "reached across and grabbed the ladder");
         assertEquals(Game.State.PLAYING, g.state());
     }
 
@@ -240,8 +264,8 @@ class GameTest {
     }
 
     @Test
-    void cartsKill() {
-        List<String> lines = new ArrayList<>(List.of("carts: 1", "spawn: 1", "---"));
+    void bouldersKill() {
+        List<String> lines = new ArrayList<>(List.of("boulders: 1", "spawn: 1", "---"));
         for (int i = 0; i < Level.HEIGHT - 2; i++) {
             lines.add("");
         }
@@ -252,7 +276,7 @@ class GameTest {
         for (int i = 0; i < 200 && g.state() == Game.State.PLAYING; i++) {
             g.tick();
         }
-        assertTrue(g.state() != Game.State.PLAYING, "a cart bouncing along the only floor eventually hits a still player");
+        assertTrue(g.state() != Game.State.PLAYING, "a boulder bouncing along the only floor eventually hits a still player");
     }
 
     @Test
@@ -282,7 +306,7 @@ class GameTest {
         List<Level> levels = Level.loadAll();
         assertTrue(!levels.isEmpty());
         for (Level level : levels) {
-            assertTrue(!level.chutes().isEmpty(), level.name() + " has a cart chute");
+            assertTrue(!level.chutes().isEmpty(), level.name() + " has a boulder chute");
         }
     }
 }
