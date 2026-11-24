@@ -24,7 +24,9 @@ You walk on platforms `=`, climb ladders `H`, and jump over falling boulders `o`
 Spikes `^` and boulders cost a life and restart the level.
 Landing on a trampoline `.` bounces you off in a random direction.
 
-The terminal must be at least 62x24.
+The terminal must be at least 62x25 (62x24 in the modern style).
+
+You start with 4 lads (lives).
 
 ## Controls
 

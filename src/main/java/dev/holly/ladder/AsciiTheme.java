@@ -91,12 +91,18 @@ public final class AsciiTheme implements Theme {
         if (game.level() == null) {
             return Line.from(Span.styled(" Best ", GREEN), Span.styled(String.valueOf(game.highScore()), GREEN));
         }
-        return Line.from(
-                Span.styled(" " + game.levelNumber() + ": ", GREEN), Span.styled(game.level().name(), GREEN),
-                Span.styled("  Score ", GREEN), Span.styled(String.valueOf(game.score()), GREEN),
-                Span.styled("  Lives ", GREEN), Span.styled(String.valueOf(Math.max(0, game.lives())), GREEN),
-                Span.styled("  Time ", GREEN), Span.styled(String.valueOf(game.secondsLeft()), GREEN),
-                Span.styled("  Best ", GREEN), Span.styled(String.valueOf(game.highScore()), GREEN));
+        return Line.styled(" " + game.level().name() + "   Time: " + game.secondsLeft()
+                + "   Best: " + game.highScore(), GREEN);
+    }
+
+    /** Lads (lives), level and score, under the bottom of the map. */
+    @Override
+    public Line infoLine(Game game) {
+        if (game.level() == null) {
+            return Line.empty();
+        }
+        return Line.styled(" Lads: " + Math.max(0, game.lives()) + "   Level: " + game.levelNumber()
+                + "   Score: " + game.score(), GREEN);
     }
 
     @Override

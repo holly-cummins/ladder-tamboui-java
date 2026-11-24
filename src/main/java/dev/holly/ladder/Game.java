@@ -17,7 +17,7 @@ public final class Game {
     public static final int TICKS_PER_SECOND = 20;
 
     static final int PLAYER_PERIOD = 2;          // player moves every N ticks
-    static final int STARTING_LIVES = 5;
+    static final int STARTING_LIVES = 4;
     static final int CLIMB_REQUEST_STEPS = 12;   // how long an up/down request waits for a ladder
     static final int[] JUMP_ARC = {-1, -1, 0, 1, 1};
     static final int GEM_POINTS = 100;

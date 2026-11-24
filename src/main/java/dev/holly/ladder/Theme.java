@@ -46,6 +46,11 @@ public interface Theme {
 
     Line statusLine(Game game);
 
+    /** A line under the playing field, or null for none. */
+    default Line infoLine(Game game) {
+        return null;
+    }
+
     /** Banner shown when the clock runs out. */
     default String outOfTimeBanner() {
         return "OUT OF TIME";

@@ -20,7 +20,6 @@ public final class Renderer {
 
     private static final int FIELD_W = Level.WIDTH + 2;   // plus border
     private static final int FIELD_H = Level.HEIGHT + 2;
-    private static final int TOTAL_H = FIELD_H + 2;        // plus status and help lines
 
     private Theme theme;
 
@@ -41,18 +40,21 @@ public final class Renderer {
     public void draw(Frame frame, Game game) {
         Rect area = frame.area();
         frame.renderWidget(Block.builder().style(theme.screen()).build(), area);
-        if (area.width() < FIELD_W || area.height() < TOTAL_H) {
+        Line info = theme.infoLine(game);
+        int infoH = info == null ? 0 : 1;
+        int totalH = FIELD_H + 2 + infoH; // plus status, info and help lines
+        if (area.width() < FIELD_W || area.height() < totalH) {
             frame.renderWidget(Paragraph.builder()
                     .text(Text.from(
-                            Line.from("Ladder needs a terminal of at least " + FIELD_W + "x" + TOTAL_H + "."),
+                            Line.from("Ladder needs a terminal of at least " + FIELD_W + "x" + totalH + "."),
                             Line.from("This one is " + area.width() + "x" + area.height() + ". Press q to quit.")))
                     .build(), area);
             return;
         }
 
-        Rect column = centre(area, FIELD_W, TOTAL_H);
+        Rect column = centre(area, FIELD_W, totalH);
         List<Rect> rows = Layout.vertical()
-                .constraints(Constraint.length(1), Constraint.length(FIELD_H), Constraint.length(1))
+                .constraints(Constraint.length(1), Constraint.length(FIELD_H), Constraint.length(infoH), Constraint.length(1))
                 .split(column);
 
         frame.renderWidget(Paragraph.from(theme.statusLine(game)), rows.get(0));
@@ -73,7 +75,10 @@ public final class Renderer {
                 drawBanner(frame, rows.get(1), banner);
             }
         }
-        frame.renderWidget(Paragraph.from(Line.styled(theme.helpText(game), theme.label())), rows.get(2));
+        if (info != null) {
+            frame.renderWidget(Paragraph.from(info), rows.get(2));
+        }
+        frame.renderWidget(Paragraph.from(Line.styled(theme.helpText(game), theme.label())), rows.get(3));
     }
 
     private static Rect centre(Rect area, int w, int h) {
