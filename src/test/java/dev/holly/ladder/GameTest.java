@@ -1,4 +1,4 @@
-package dev.holly.orerunner;
+package dev.holly.ladder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -118,19 +118,9 @@ class GameTest {
     }
 
     @Test
-    void gasKills() {
+    void jumpingOverSpikesIsSafe() {
         Game g = game(
-                "@ ~  ",
-                "#####");
-        g.right();
-        ticks(g, playerSteps(2));
-        assertEquals(Game.State.DYING, g.state());
-    }
-
-    @Test
-    void jumpingOverGasIsSafe() {
-        Game g = game(
-                "@  ~     ",
+                "@  ^     ",
                 "#########");
         g.right();
         ticks(g, playerSteps(1));
@@ -138,6 +128,50 @@ class GameTest {
         ticks(g, playerSteps(8));
         assertEquals(Game.State.PLAYING, g.state());
         assertTrue(g.player().x() > 3);
+    }
+
+    @Test
+    void spikesKill() {
+        Game g = game(
+                "@ ^  ",
+                "#####");
+        g.right();
+        ticks(g, playerSteps(2));
+        assertEquals(Game.State.DYING, g.state());
+    }
+
+    @Test
+    void landingOnATrampolineBouncesThePlayer() {
+        Game g = game(
+                "@        ",
+                "##       ",
+                "         ",
+                "  .      ",
+                "#########");
+        int floor = Level.HEIGHT - 2;
+        g.right();
+        ticks(g, playerSteps(2)); // walk off the ledge
+        int lowest = Integer.MIN_VALUE;
+        boolean wentBackUp = false;
+        for (int i = 0; i < 6; i++) {
+            ticks(g, playerSteps(1));
+            lowest = Math.max(lowest, g.player().y());
+            if (lowest == floor && g.player().y() < floor) {
+                wentBackUp = true;
+            }
+        }
+        assertTrue(wentBackUp, "bounced back up after landing on the trampoline");
+    }
+
+    @Test
+    void walkingOntoATrampolineDoesNotBounce() {
+        Game g = game(
+                "@ .   ",
+                "######");
+        g.right();
+        ticks(g, playerSteps(3));
+        assertEquals(Level.HEIGHT - 2, g.player().y());
+        assertEquals(3, g.player().x());
     }
 
     @Test
@@ -159,7 +193,7 @@ class GameTest {
     @Test
     void losingAllLivesEndsTheGame() {
         Game g = game(
-                "@~",
+                "@^",
                 "##");
         for (int i = 0; i < Game.STARTING_LIVES; i++) {
             g.right();

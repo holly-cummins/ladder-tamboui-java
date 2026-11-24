@@ -20,7 +20,8 @@ import java.util.Map;
  *   #  rock floor / wall        |  ladder
  *   *  gem                      E  exit lift
  *   v  cart chute (spawner)     u  pit that swallows carts
- *   ~  gas vent (deadly)        @  player start
+ *   ^  spikes (deadly)          .  trampoline
+ *   @  player start
  * </pre>
  * Ladders should run from the standing row of the lower floor, through the upper floor,
  * up to the standing row above it.

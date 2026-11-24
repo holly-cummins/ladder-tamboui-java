@@ -170,7 +170,11 @@ public final class Game {
         }
         spawnCarts();
         if (stateTicks % PLAYER_PERIOD == 0) {
+            int yBefore = player.y;
             stepPlayer();
+            if (player.y > yBefore) {
+                bounceOffTrampoline();
+            }
             if (checkPlayerCell() || hitByCart()) {
                 return;
             }
@@ -293,6 +297,20 @@ public final class Game {
         }
     }
 
+    /** Landing on a trampoline launches the player into a jump in a random direction. */
+    private void bounceOffTrampoline() {
+        Player p = player;
+        if (tileAt(p.x, p.y) != Tile.TRAMPOLINE || !isSupported(p.x, p.y)) {
+            return;
+        }
+        p.climbing = 0;
+        p.wantVert = 0;
+        p.wantJump = false;
+        p.jumpDir = random.nextInt(3) - 1;
+        p.dir = p.jumpDir;
+        p.jumpStep = 0;
+    }
+
     private void stepCarts() {
         for (Iterator<Cart> it = carts.iterator(); it.hasNext(); ) {
             Cart c = it.next();
@@ -334,7 +352,7 @@ public final class Game {
                 tiles[player.y][player.x] = Tile.EMPTY;
                 score += GEM_POINTS;
             }
-            case GAS -> {
+            case SPIKES -> {
                 die();
                 return true;
             }

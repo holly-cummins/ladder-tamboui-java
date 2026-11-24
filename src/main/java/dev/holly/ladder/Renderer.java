@@ -6,43 +6,41 @@ import java.util.List;
 import dev.tamboui.layout.Constraint;
 import dev.tamboui.layout.Layout;
 import dev.tamboui.layout.Rect;
-import dev.tamboui.style.Color;
 import dev.tamboui.style.Style;
 import dev.tamboui.terminal.Frame;
 import dev.tamboui.text.Line;
 import dev.tamboui.text.Span;
 import dev.tamboui.text.Text;
 import dev.tamboui.widgets.block.Block;
-import dev.tamboui.widgets.block.BorderType;
-import dev.tamboui.widgets.block.Borders;
 import dev.tamboui.widgets.block.Title;
 import dev.tamboui.widgets.paragraph.Paragraph;
 
-/** Draws a {@link Game} into a TamboUI frame. */
+/** Draws a {@link Game} into a TamboUI frame, using a {@link Theme} for how things look. */
 public final class Renderer {
 
     private static final int FIELD_W = Level.WIDTH + 2;   // plus border
     private static final int FIELD_H = Level.HEIGHT + 2;
     private static final int TOTAL_H = FIELD_H + 2;        // plus status and help lines
 
-    private static final Style ROCK = Style.EMPTY.fg(Color.rgb(150, 105, 60));
-    private static final Style LADDER = Style.EMPTY.fg(Color.rgb(220, 190, 90));
-    private static final Style GEM = Style.EMPTY.fg(Color.LIGHT_CYAN).bold();
-    private static final Style EXIT = Style.EMPTY.fg(Color.LIGHT_GREEN).bold();
-    private static final Style CHUTE = Style.EMPTY.fg(Color.GRAY);
-    private static final Style PIT = Style.EMPTY.fg(Color.DARK_GRAY);
-    private static final Style GAS_A = Style.EMPTY.fg(Color.GREEN);
-    private static final Style GAS_B = Style.EMPTY.fg(Color.LIGHT_GREEN).dim();
-    private static final Style CART = Style.EMPTY.fg(Color.LIGHT_RED).bold();
-    private static final Style PLAYER = Style.EMPTY.fg(Color.BRIGHT_WHITE).bold();
-    private static final Style DEAD = Style.EMPTY.fg(Color.RED).bold();
-    private static final Style PLAIN = Style.EMPTY;
-    private static final Style LABEL = Style.EMPTY.fg(Color.GRAY);
-    private static final Style VALUE = Style.EMPTY.fg(Color.LIGHT_YELLOW).bold();
-    private static final Style BORDER = Style.EMPTY.fg(Color.rgb(110, 80, 50));
+    private Theme theme;
+
+    public Renderer(Theme theme) {
+        this.theme = theme;
+    }
+
+    public Theme theme() {
+        return theme;
+    }
+
+    /** Moves to the next (+1) or previous (-1) style in {@link Theme#NAMES}, wrapping round. */
+    public void cycleTheme(int step) {
+        int i = Theme.NAMES.indexOf(theme.name());
+        theme = Theme.named(Theme.NAMES.get(Math.floorMod(i + step, Theme.NAMES.size())));
+    }
 
     public void draw(Frame frame, Game game) {
         Rect area = frame.area();
+        frame.renderWidget(Block.builder().style(theme.screen()).build(), area);
         if (area.width() < FIELD_W || area.height() < TOTAL_H) {
             frame.renderWidget(Paragraph.builder()
                     .text(Text.from(
@@ -57,13 +55,14 @@ public final class Renderer {
                 .constraints(Constraint.length(1), Constraint.length(FIELD_H), Constraint.length(1))
                 .split(column);
 
-        frame.renderWidget(Paragraph.from(statusLine(game)), rows.get(0));
-        Block block = Block.builder()
-                .borders(Borders.ALL)
-                .borderType(BorderType.THICK)
-                .borderStyle(BORDER)
-                .title(Title.from(Line.from(Span.styled(" LADDER ", VALUE))).centered())
-                .build();
+        frame.renderWidget(Paragraph.from(theme.statusLine(game)), rows.get(0));
+        Block.Builder frameBuilder = theme.fieldFrame()
+                .title(Title.from(Line.from(Span.styled(" LADDER ", theme.value()))).centered());
+        Line footer = theme.fieldFooter(game);
+        if (footer != null) {
+            frameBuilder.titleBottom(Title.from(footer).centered());
+        }
+        Block block = frameBuilder.build();
 
         if (game.state() == Game.State.TITLE) {
             frame.renderWidget(Paragraph.builder().text(titleText()).block(block).centered().build(), rows.get(1));
@@ -74,37 +73,17 @@ public final class Renderer {
                 drawBanner(frame, rows.get(1), banner);
             }
         }
-        frame.renderWidget(Paragraph.from(Line.styled(helpText(game), LABEL)), rows.get(2));
+        frame.renderWidget(Paragraph.from(Line.styled(theme.helpText(game), theme.label())), rows.get(2));
     }
 
     private static Rect centre(Rect area, int w, int h) {
         return new Rect(area.x() + (area.width() - w) / 2, area.y() + (area.height() - h) / 2, w, h);
     }
 
-    private Line statusLine(Game game) {
-        if (game.level() == null) {
-            return Line.from(Span.styled(" Best ", LABEL), Span.styled(String.valueOf(game.highScore()), VALUE));
-        }
-        return Line.from(
-                Span.styled(" " + game.levelNumber() + ": ", LABEL), Span.styled(game.level().name(), VALUE),
-                Span.styled("  Score ", LABEL), Span.styled(String.valueOf(game.score()), VALUE),
-                Span.styled("  Lives ", LABEL), Span.styled(String.valueOf(Math.max(0, game.lives())), VALUE),
-                Span.styled("  Air ", LABEL), Span.styled(String.valueOf(game.secondsLeft()), VALUE),
-                Span.styled("  Best ", LABEL), Span.styled(String.valueOf(game.highScore()), VALUE));
-    }
-
-    private String helpText(Game game) {
-        return switch (game.state()) {
-            case TITLE, GAME_OVER -> " space: start    q: quit";
-            case PAUSED -> " p or space: resume    q: quit";
-            default -> " ←→ run  ↑↓ climb  ↓ stop  space jump  p pause  q quit";
-        };
-    }
-
     private String banner(Game game) {
         return switch (game.state()) {
             case PAUSED -> "PAUSED";
-            case DYING -> game.secondsLeft() <= 0 && game.lives() > 0 ? "OUT OF AIR" : null;
+            case DYING -> game.secondsLeft() <= 0 && game.lives() > 0 ? theme.outOfTimeBanner() : null;
             case LEVEL_DONE -> "LEVEL CLEAR";
             case GAME_OVER -> "GAME OVER";
             default -> null;
@@ -115,89 +94,77 @@ public final class Renderer {
         int w = text.length() + 6;
         Rect r = centre(field, w, 3);
         frame.renderWidget(Paragraph.builder()
-                .text(Text.from(Line.from(Span.styled(text, VALUE))))
+                .text(Text.from(Line.from(Span.styled(text, theme.value()))))
                 .centered()
-                .block(Block.builder().borders(Borders.ALL).borderType(BorderType.DOUBLE).borderStyle(VALUE).build())
+                .block(theme.bannerFrame().build())
                 .build(), r);
     }
 
     private Text titleText() {
         List<Line> lines = new ArrayList<>();
         lines.add(Line.empty());
-        lines.add(Line.from(Span.styled("O R E   R U N N E R", VALUE)));
+        lines.add(Line.from(Span.styled(theme.titleBanner(), theme.value())));
         lines.add(Line.empty());
-        lines.add(Line.styled("Climb out of the mine before your air runs out.", PLAIN));
-        lines.add(Line.styled("Dodge the runaway ore carts. Grab gems on the way.", PLAIN));
+        for (String s : theme.blurb()) {
+            lines.add(Line.styled(s, theme.plain()));
+        }
         lines.add(Line.empty());
-        lines.add(legend("@", PLAYER, "you"));
-        lines.add(legend("●", CART, "runaway cart"));
-        lines.add(legend("◆", GEM, "gem, " + Game.GEM_POINTS + " points"));
-        lines.add(legend("≈", GAS_A, "gas vent, deadly"));
-        lines.add(legend("⌂", EXIT, "lift to the next level"));
-        lines.add(legend("╫", LADDER, "ladder"));
+        for (Theme.LegendEntry e : theme.legend()) {
+            lines.add(Line.from(
+                    Span.styled(e.cell().glyph(), e.cell().style()),
+                    Span.styled("  " + String.format("%-30s", e.meaning()), theme.label())));
+        }
         lines.add(Line.empty());
-        lines.add(Line.styled("Press space to start", EXIT));
+        lines.add(styleSwitcher());
+        lines.add(Line.empty());
+        lines.add(Line.styled("Press space to start", theme.accent()));
         return Text.from(lines);
     }
 
-    private static Line legend(String glyph, Style style, String what) {
-        return Line.from(Span.styled(glyph, style), Span.styled("  " + String.format("%-24s", what), LABEL));
+    /** Shows every style with the current one bracketed, e.g. {@code Style: [ascii]  modern}. */
+    private Line styleSwitcher() {
+        List<Span> spans = new ArrayList<>();
+        spans.add(Span.styled("Style:", theme.label()));
+        for (String name : Theme.NAMES) {
+            boolean current = name.equals(theme.name());
+            spans.add(Span.styled(current ? " [" + name + "]" : "  " + name + " ", current ? theme.value() : theme.label()));
+        }
+        return Line.from(spans);
     }
 
     private Text field(Game game) {
-        String[] chars = new String[Level.WIDTH];
-        Style[] styles = new Style[Level.WIDTH];
-        boolean flicker = (game.ticks() / 4) % 2 == 0;
+        Theme.Cell[] cells = new Theme.Cell[Level.WIDTH];
         List<Line> lines = new ArrayList<>(Level.HEIGHT);
-
         for (int y = 0; y < Level.HEIGHT; y++) {
             for (int x = 0; x < Level.WIDTH; x++) {
-                switch (game.tile(x, y)) {
-                    case ROCK -> set(chars, styles, x, "▒", ROCK);
-                    case LADDER -> set(chars, styles, x, "╫", LADDER);
-                    case GEM -> set(chars, styles, x, "◆", GEM);
-                    case EXIT -> set(chars, styles, x, "⌂", EXIT);
-                    case CHUTE -> set(chars, styles, x, "▼", CHUTE);
-                    case PIT -> set(chars, styles, x, "◡", PIT);
-                    case GAS -> set(chars, styles, x, flicker ? "≈" : "~", flicker ? GAS_A : GAS_B);
-                    default -> set(chars, styles, x, " ", PLAIN);
-                }
+                cells[x] = theme.tile(game, x, y);
             }
             for (Game.Cart c : game.carts()) {
                 if (c.y() == y && c.x() >= 0 && c.x() < Level.WIDTH) {
-                    set(chars, styles, c.x(), "●", CART);
+                    cells[c.x()] = theme.cart(game, c);
                 }
             }
             Game.Player p = game.player();
             if (p.y() == y) {
-                if (game.state() == Game.State.DYING) {
-                    set(chars, styles, p.x(), flicker ? "✶" : "@", DEAD);
-                } else {
-                    set(chars, styles, p.x(), "@", PLAYER);
-                }
+                cells[p.x()] = theme.player(game);
             }
-            lines.add(toLine(chars, styles));
+            lines.add(toLine(cells));
         }
         return Text.from(lines);
     }
 
-    private static void set(String[] chars, Style[] styles, int x, String c, Style s) {
-        chars[x] = c;
-        styles[x] = s;
-    }
-
     /** Merges runs of same-styled cells into single spans. */
-    private static Line toLine(String[] chars, Style[] styles) {
+    private static Line toLine(Theme.Cell[] cells) {
         List<Span> spans = new ArrayList<>();
         StringBuilder run = new StringBuilder();
-        Style current = styles[0];
-        for (int x = 0; x < chars.length; x++) {
-            if (styles[x] != current) {
+        Style current = cells[0].style();
+        for (Theme.Cell cell : cells) {
+            if (!cell.style().equals(current)) {
                 spans.add(Span.styled(run.toString(), current));
                 run.setLength(0);
-                current = styles[x];
+                current = cell.style();
             }
-            run.append(chars[x]);
+            run.append(cell.glyph());
         }
         spans.add(Span.styled(run.toString(), current));
         return Line.from(spans);

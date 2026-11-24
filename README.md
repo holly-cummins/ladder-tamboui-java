@@ -9,8 +9,20 @@ Needs Java 25 and Maven.
 
 ```sh
 mvn package
-java --enable-native-access=ALL-UNNAMED -jar target/ore-runner-0.1.0-SNAPSHOT.jar
+java --enable-native-access=ALL-UNNAMED -jar target/ladder-0.1.0-SNAPSHOT.jar
 ```
+
+There are two looks. Switch between them on the title screen with ← → (or Tab), or pick the starting one with `--style`:
+
+| Option | Look |
+| --- | --- |
+| `--style=ascii` (default) | Plain 7-bit ASCII, green on black like a classic green screen. Works in any terminal. |
+| `--style=modern` | Truecolor, Unicode glyphs, textured rock, shimmering gems and an air gauge. Needs a modern terminal and font. |
+
+In ASCII mode you are the lad, `p` or `q` depending on which way you face, or `g` when still.
+You walk on platforms `=`, climb ladders `H`, and jump over falling boulders `o` to collect minor treasures `&` and reach the main treasure `$`.
+Spikes `^` and boulders cost a life and restart the level.
+Landing on a trampoline `.` bounces you off in a random direction.
 
 The terminal must be at least 62x24.
 
@@ -50,5 +62,6 @@ spawn: 60     # average ticks between carts (20 ticks a second)
 | `E` | Exit lift |
 | `v` | Cart chute |
 | `u` | Pit that swallows carts |
-| `~` | Gas vent (deadly) |
+| `^` | Spikes (deadly) |
+| `.` | Trampoline: landing on it bounces you in a random direction |
 | `@` | Player start |

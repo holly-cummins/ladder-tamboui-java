@@ -9,7 +9,8 @@ public enum Tile {
     EXIT,
     CHUTE,
     PIT,
-    GAS;
+    SPIKES,
+    TRAMPOLINE;
 
     static Tile fromMapChar(char c) {
         return switch (c) {
@@ -19,7 +20,8 @@ public enum Tile {
             case 'E' -> EXIT;
             case 'v' -> CHUTE;
             case 'u' -> PIT;
-            case '~' -> GAS;
+            case '^' -> SPIKES;
+            case '.' -> TRAMPOLINE;
             default -> EMPTY;
         };
     }

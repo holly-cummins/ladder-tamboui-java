@@ -14,11 +14,55 @@ import dev.tamboui.tui.event.TickEvent;
 /** Wires the game to the terminal: TamboUI's TuiRunner supplies ticks, keys and redraws. */
 public final class Main {
 
+    private static final String USAGE = """
+            Usage: ladder [--style=ascii|modern]
+
+              --style=ascii   green-screen ASCII; works anywhere (default)
+              --style=modern  truecolor, Unicode glyphs and animation
+
+            You can also switch style on the title screen with the arrow keys or Tab.
+            """;
+
     private final Game game = new Game(Level.loadAll(), new Random());
-    private final Renderer renderer = new Renderer();
+    private final Renderer renderer;
+
+    private Main(Theme theme) {
+        this.renderer = new Renderer(theme);
+    }
 
     public static void main(String[] args) throws Exception {
-        new Main().run();
+        Theme theme;
+        try {
+            theme = parseArgs(args);
+        } catch (IllegalArgumentException e) {
+            System.err.println(e.getMessage());
+            System.err.print(USAGE);
+            System.exit(2);
+            return;
+        }
+        if (theme == null) {
+            System.out.print(USAGE);
+            return;
+        }
+        new Main(theme).run();
+    }
+
+    /** Returns the chosen theme, or null if help was asked for. */
+    static Theme parseArgs(String[] args) {
+        String style = "ascii";
+        for (int i = 0; i < args.length; i++) {
+            String arg = args[i];
+            if (arg.equals("-h") || arg.equals("--help")) {
+                return null;
+            } else if (arg.startsWith("--style=")) {
+                style = arg.substring("--style=".length());
+            } else if (arg.equals("--style") && i + 1 < args.length) {
+                style = args[++i];
+            } else {
+                throw new IllegalArgumentException("Unknown option '" + arg + "'.");
+            }
+        }
+        return Theme.named(style);
     }
 
     private void run() throws Exception {
@@ -48,6 +92,16 @@ public final class Main {
                     game.stopHorizontal(1);
                 }
                 return false;
+            }
+            if (game.state() == Game.State.TITLE) {
+                if (isLeft(key)) {
+                    renderer.cycleTheme(-1);
+                    return true;
+                }
+                if (isRight(key) || key.isKey(KeyCode.TAB)) {
+                    renderer.cycleTheme(1);
+                    return true;
+                }
             }
             if (isLeft(key)) {
                 game.left();
