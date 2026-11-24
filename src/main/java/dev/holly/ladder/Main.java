@@ -70,6 +70,11 @@ public final class Main {
                 .tickRate(Duration.ofMillis(1000 / Game.TICKS_PER_SECOND))
                 .build();
         try (TuiRunner tui = TuiRunner.create(config)) {
+            // Some terminals show whatever the last run left on the alternate screen (say, the modern
+            // style) until the first frame arrives, so wipe it and draw the title straight away.
+            tui.backend().clear();
+            tui.backend().flush();
+            tui.draw(frame -> renderer.draw(frame, game));
             tui.run(this::handle, frame -> renderer.draw(frame, game));
         }
     }

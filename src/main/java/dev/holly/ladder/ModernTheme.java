@@ -12,7 +12,7 @@ import dev.tamboui.widgets.block.BorderType;
 import dev.tamboui.widgets.block.Borders;
 
 /**
- * 24-bit colour, Unicode glyphs, textured rock, shimmering treasure and an air gauge. Needs a terminal with
+ * 24-bit colour, Unicode glyphs, textured rock, shimmering treasure and a time gauge. Needs a terminal with
  * truecolor and a font that has box-drawing and geometric shapes.
  */
 public final class ModernTheme implements Theme {
@@ -146,7 +146,7 @@ public final class ModernTheme implements Theme {
                 .style(Style.EMPTY.bg(Color.rgb(40, 30, 24)));
     }
 
-    /** An air gauge that drains from green through amber to red. */
+    /** A time gauge that drains from green through amber to red. */
     @Override
     public Line fieldFooter(Game game) {
         if (game.level() == null || game.state() == Game.State.TITLE) {
@@ -160,7 +160,7 @@ public final class ModernTheme implements Theme {
         Style bar = Style.EMPTY.fg(Color.rgb(colour[0], colour[1], colour[2]));
         Style empty = Style.EMPTY.fg(Color.rgb(60, 50, 44));
         List<Span> spans = new ArrayList<>();
-        spans.add(Span.styled(" air ", LABEL));
+        spans.add(Span.styled(" time ", LABEL));
         spans.add(Span.styled("━".repeat(filled), bar));
         spans.add(Span.styled("━".repeat(GAUGE_WIDTH - filled), empty));
         spans.add(Span.styled(String.format(" %3ds ", game.secondsLeft()), left < 0.2 ? bar.bold() : VALUE));
@@ -182,11 +182,6 @@ public final class ModernTheme implements Theme {
                 Span.styled(game.level().hasSign() ? "" : "  " + game.level().name(), VALUE),
                 Span.styled("   ◆ ", LABEL), Span.styled(String.valueOf(game.score()), VALUE),
                 Span.styled("   best ", LABEL), Span.styled(String.valueOf(game.highScore()), VALUE));
-    }
-
-    @Override
-    public String outOfTimeBanner() {
-        return "OUT OF AIR";
     }
 
     @Override
@@ -255,7 +250,7 @@ public final class ModernTheme implements Theme {
     @Override
     public List<String> blurb() {
         return List.of(
-                "Reach the treasure before your air runs out.",
+                "Reach the treasure before time runs out.",
                 "Jump the rolling boulders. Grab the treasure on the way.");
     }
 

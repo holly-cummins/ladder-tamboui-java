@@ -17,7 +17,7 @@ There are two looks. Press S to switch between them at any time (← → and Tab
 | Option | Look |
 | --- | --- |
 | `--style=ascii` (default) | Plain 7-bit ASCII, green on black like a classic green screen. Works in any terminal. |
-| `--style=modern` | Truecolor, Unicode glyphs, textured rock, shimmering treasure and an air gauge. Needs a modern terminal and font. |
+| `--style=modern` | Truecolor, Unicode glyphs, textured rock, shimmering treasure and a time gauge. Needs a modern terminal and font. |
 
 In ASCII mode you are the lad, `p` or `q` depending on which way you face, or `g` when still.
 You walk on platforms `=`, climb ladders `H`, and jump over rolling boulders `o` to collect minor treasures `&` and reach the main treasure `$`.
