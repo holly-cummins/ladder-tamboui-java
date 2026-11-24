@@ -3,6 +3,9 @@ package dev.holly.ladder;
 import java.time.Duration;
 import java.util.Random;
 
+import dev.tamboui.buffer.Buffer;
+import dev.tamboui.layout.Rect;
+import dev.tamboui.terminal.Frame;
 import dev.tamboui.tui.TuiConfig;
 import dev.tamboui.tui.TuiRunner;
 import dev.tamboui.tui.event.Event;
@@ -66,16 +69,34 @@ public final class Main {
     }
 
     private void run() throws Exception {
+        warmUp();
         TuiConfig config = TuiConfig.builder()
                 .tickRate(Duration.ofMillis(1000 / Game.TICKS_PER_SECOND))
+                .alternateScreen(false) // switched below, in the same write as the first frame
                 .build();
         try (TuiRunner tui = TuiRunner.create(config)) {
-            // Some terminals show whatever the last run left on the alternate screen (say, the modern
-            // style) until the first frame arrives, so wipe it and draw the title straight away.
-            tui.backend().clear();
-            tui.backend().flush();
+            // Switching to the alternate screen shows it blank (or, in some terminals, with the last
+            // run's picture) until the first frame arrives. Begin a synchronized update first, so the
+            // terminal holds the display until the title is complete; the frame's own end-of-update
+            // releases it. Terminals without synchronized output just ignore it.
+            tui.backend().writeRaw("\u001b[?2026h\u001b[?1049h");
             tui.draw(frame -> renderer.draw(frame, game));
-            tui.run(this::handle, frame -> renderer.draw(frame, game));
+            try {
+                tui.run(this::handle, frame -> renderer.draw(frame, game));
+            } finally {
+                tui.backend().leaveAlternateScreen();
+            }
+        }
+    }
+
+    /**
+     * Draws the title a few times off-screen before taking over the terminal, so the classes and code
+     * behind the first frame are loaded and warm, and it appears the moment the screen switches.
+     */
+    private void warmUp() {
+        Buffer buffer = Buffer.empty(new Rect(0, 0, 80, 30));
+        for (int i = 0; i < 20; i++) {
+            renderer.draw(Frame.forTesting(buffer), game);
         }
     }
 
