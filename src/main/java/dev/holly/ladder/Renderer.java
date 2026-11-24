@@ -112,7 +112,6 @@ public final class Renderer {
         lines.addAll(legend());
         lines.add(Line.empty());
         lines.add(styleSwitcher());
-        lines.add(Line.empty());
         lines.add(Line.styled("Press space to start", theme.accent()));
         return Text.from(lines);
     }

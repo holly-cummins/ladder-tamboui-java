@@ -28,6 +28,7 @@ public final class ModernTheme implements Theme {
     private static final Style EXIT = BASE.fg(Color.rgb(120, 230, 140)).bold();
     private static final Style CHUTE = BASE.fg(Color.rgb(140, 140, 150));
     private static final Style PIT = BASE.fg(Color.rgb(80, 74, 70));
+    private static final Style PIPE = BASE.fg(Color.rgb(140, 160, 178)).bold();
     private static final Style SPIKES = BASE.fg(Color.rgb(200, 208, 222)).bold();
     private static final Style TRAMPOLINE = BASE.fg(Color.rgb(255, 120, 200)).bold();
     private static final Style CART = BASE.fg(Color.rgb(255, 96, 64)).bold();
@@ -56,8 +57,10 @@ public final class ModernTheme implements Theme {
             case GEM -> new Cell("◆", BASE.fg(shimmer(t, x, y)).bold());
             case EXIT -> new Cell("⌂", EXIT);
             case CHUTE -> new Cell("▼", CHUTE);
-            case PIT -> new Cell("◌", PIT);
+            case PIT -> new Cell("✺", BASE.fg(lerp(new int[]{150, 90, 255}, new int[]{230, 170, 255},
+                    (Math.sin((t + x * 7) / 5.0) + 1) / 2)).bold());
             case SPIKES -> new Cell("▲", SPIKES);
+            case WALL -> new Cell("┃", PIPE);
             case TRAMPOLINE -> new Cell("◡", TRAMPOLINE);
             case EMPTY -> new Cell(" ", BASE);
         };
@@ -177,10 +180,10 @@ public final class ModernTheme implements Theme {
     @Override
     public String helpText(Game game) {
         return switch (game.state()) {
-            case TITLE -> " ␣ start   ←→ style   q quit";
+            case TITLE -> " ␣ start   s ←→ style   q quit";
             case GAME_OVER -> " ␣ start   q quit";
             case PAUSED -> " p or ␣ resume   q quit";
-            default -> " ←→ run   ↑↓ climb   ␣ jump   p pause   q quit";
+            default -> " ←→ run  ↑↓ climb  ␣ jump  s style  p pause  q quit";
         };
     }
 
@@ -249,6 +252,8 @@ public final class ModernTheme implements Theme {
                 new LegendEntry(new Cell("☻", PLAYER), "you"),
                 new LegendEntry(new Cell("●", CART), "runaway cart"),
                 new LegendEntry(new Cell("◆", BASE.fg(Color.rgb(120, 220, 255)).bold()), "gem, " + Game.GEM_POINTS + " points"),
+                new LegendEntry(new Cell("┃", PIPE), "pipe, blocks your way"),
+                new LegendEntry(new Cell("✺", BASE.fg(Color.rgb(190, 130, 255)).bold()), "star, swallows carts"),
                 new LegendEntry(new Cell("▲", SPIKES), "spikes, deadly"),
                 new LegendEntry(new Cell("◡", TRAMPOLINE), "trampoline, bounces you"),
                 new LegendEntry(new Cell("⌂", EXIT), "lift to the next level"),

@@ -47,10 +47,10 @@ class GameTest {
     @Test
     void climbsALadderToTheTop() {
         Game g = game(
-                "  |  ",
-                "##|##",
-                "  |  ",
-                "@ |  ",
+                "  H  ",
+                "##H##",
+                "  H  ",
+                "@ H  ",
                 "#####");
         int bottom = Level.HEIGHT - 2;
         g.right();
@@ -65,10 +65,10 @@ class GameTest {
     @Test
     void stepsOffTheLadderSidewaysAtFloorLevel() {
         Game g = game(
-                "  |    ",
-                "##|####",
-                "  |    ",
-                "@ |    ",
+                "  H    ",
+                "##H####",
+                "  H    ",
+                "@ H    ",
                 "#######");
         g.right();
         ticks(g, playerSteps(2));
@@ -109,7 +109,7 @@ class GameTest {
     @Test
     void gemsScoreAndTheExitEndsTheLevel() {
         Game g = game(
-                "@ * E",
+                "@ & E",
                 "#####");
         g.right();
         ticks(g, playerSteps(4));
@@ -128,6 +128,71 @@ class GameTest {
         ticks(g, playerSteps(8));
         assertEquals(Game.State.PLAYING, g.state());
         assertTrue(g.player().x() > 3);
+    }
+
+    @Test
+    void jumpingWithUpPressedGrabsALadderInMidAir() {
+        // A ladder hangs in the middle of a hole too wide to jump; its foot is out of reach from the floor.
+        Game g = game(
+                "         H     ",
+                "#########H#####",
+                "         H     ",
+                "         H     ",
+                "         H     ",
+                "@        H     ",
+                "#####    H   ##",
+                "         H     ",
+                "               ",
+                "               ",
+                "###############");
+        int standing = Level.HEIGHT - 6;
+        g.right();
+        ticks(g, playerSteps(4)); // run to the edge of the hole
+        assertEquals(4, g.player().x());
+        g.jump();
+        g.up();
+        ticks(g, playerSteps(6));
+        assertEquals(9, g.player().x(), "grabbed the ladder");
+        assertTrue(g.player().y() < standing, "and climbed it");
+        assertEquals(Game.State.PLAYING, g.state());
+    }
+
+    @Test
+    void jumpingPastALadderWithoutPressingUpDoesNotGrabIt() {
+        Game g = game(
+                "@   H     ",
+                "####H#####",
+                "    H     ",
+                "##########");
+        g.right();
+        ticks(g, playerSteps(1));
+        g.jump();
+        ticks(g, playerSteps(8));
+        assertEquals(Level.HEIGHT - 4, g.player().y(), "still on the same floor");
+        assertTrue(g.player().x() > 4);
+    }
+
+    @Test
+    void pipeWallsBlockWalking() {
+        Game g = game(
+                "@   |  ",
+                "#######");
+        g.right();
+        ticks(g, playerSteps(10));
+        assertEquals(3, g.player().x());
+    }
+
+    @Test
+    void jumpsOverALowPipe() {
+        Game g = game(
+                "@   |     ",
+                "##########");
+        g.right();
+        ticks(g, playerSteps(2));
+        g.jump();
+        ticks(g, playerSteps(8));
+        assertTrue(g.player().x() > 4, "cleared the pipe");
+        assertEquals(Level.HEIGHT - 2, g.player().y());
     }
 
     @Test

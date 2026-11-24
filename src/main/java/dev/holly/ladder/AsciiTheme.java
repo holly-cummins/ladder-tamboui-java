@@ -47,6 +47,7 @@ public final class AsciiTheme implements Theme {
             case CHUTE -> new Cell("V", GREEN);
             case PIT -> new Cell("*", GREEN);
             case SPIKES -> new Cell("^", GREEN);
+            case WALL -> new Cell("|", GREEN);
             case TRAMPOLINE -> new Cell(".", GREEN);
             case EMPTY -> EMPTY;
         };
@@ -116,10 +117,10 @@ public final class AsciiTheme implements Theme {
     @Override
     public String helpText(Game game) {
         return switch (game.state()) {
-            case TITLE -> " space: start   left/right: style   q: quit";
+            case TITLE -> " space: start   s or left/right: style   q: quit";
             case GAME_OVER -> " space: start    q: quit";
             case PAUSED -> " p or space: resume    q: quit";
-            default -> " arrows/WASD move  space jump  p pause  q quit";
+            default -> " arrows move  space jump  s style  p pause  q quit";
         };
     }
 
@@ -136,7 +137,7 @@ public final class AsciiTheme implements Theme {
     public List<String> blurb() {
         return List.of(
                 "Reach the treasure before time runs out.",
-                "Jump the falling boulders. Grab the loot on the way.");
+                "Jump the rolling barrels. Grab the loot on the way.");
     }
 
     @Override
@@ -145,8 +146,10 @@ public final class AsciiTheme implements Theme {
                 new LegendEntry(new Cell("p", GREEN), "you (q left, g still)"),
                 new LegendEntry(new Cell("=", GREEN), "platform"),
                 new LegendEntry(new Cell("H", GREEN), "ladder"),
-                new LegendEntry(new Cell("o", GREEN), "boulder"),
+                new LegendEntry(new Cell("o", GREEN), "barrel"),
                 new LegendEntry(new Cell("&", GREEN), "treasure, " + Game.GEM_POINTS + " points"),
+                new LegendEntry(new Cell("|", GREEN), "wall"),
+                new LegendEntry(new Cell("*", GREEN), "star, swallows barrels"),
                 new LegendEntry(new Cell("^", GREEN), "spikes, deadly"),
                 new LegendEntry(new Cell(".", GREEN), "trampoline, bounces you"),
                 new LegendEntry(new Cell("$", GREEN), "main treasure, next level"));

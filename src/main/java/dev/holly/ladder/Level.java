@@ -17,9 +17,11 @@ import java.util.Map;
  * The file starts with {@code key: value} header lines, then a {@code ---} line, then the map.
  * Map characters (the editing alphabet, not what is drawn on screen):
  * <pre>
- *   #  rock floor / wall        |  ladder
- *   *  gem                      E  exit lift
- *   v  cart chute (spawner)     u  pit that swallows carts
+ *   #  rock floor / wall        H  ladder
+ *   |  pipe wall (solid)
+ *   &  gem                      E  exit lift
+ *   v  cart chute (spawner)     *  star that swallows carts
+ *          (carts roll away from a | pipe beside the chute)
  *   ^  spikes (deadly)          .  trampoline
  *   @  player start             [  left end of the sign showing the level name
  *                                  (it hangs on chains from whatever is above)

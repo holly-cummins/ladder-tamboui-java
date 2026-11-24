@@ -10,16 +10,18 @@ public enum Tile {
     CHUTE,
     PIT,
     SPIKES,
+    WALL,
     TRAMPOLINE;
 
     static Tile fromMapChar(char c) {
         return switch (c) {
             case '#' -> ROCK;
-            case '|' -> LADDER;
-            case '*' -> GEM;
+            case 'H' -> LADDER;
+            case '|' -> WALL;
+            case '&' -> GEM;
             case 'E' -> EXIT;
             case 'v' -> CHUTE;
-            case 'u' -> PIT;
+            case '*' -> PIT;
             case '^' -> SPIKES;
             case '.' -> TRAMPOLINE;
             default -> EMPTY;

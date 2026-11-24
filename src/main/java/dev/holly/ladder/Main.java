@@ -20,7 +20,7 @@ public final class Main {
               --style=ascii   green-screen ASCII; works anywhere (default)
               --style=modern  truecolor, Unicode glyphs and animation
 
-            You can also switch style on the title screen with the arrow keys or Tab.
+            You can also switch style at any time with s, or on the title screen with the arrow keys or Tab.
             """;
 
     private final Game game = new Game(Level.loadAll(), new Random());
@@ -93,6 +93,10 @@ public final class Main {
                 }
                 return false;
             }
+            if (key.isCharIgnoreCase('s')) {
+                renderer.cycleTheme(1);
+                return true;
+            }
             if (game.state() == Game.State.TITLE) {
                 if (isLeft(key)) {
                     renderer.cycleTheme(-1);
@@ -109,7 +113,7 @@ public final class Main {
                 game.right();
             } else if (key.isKey(KeyCode.UP) || key.isCharIgnoreCase('w')) {
                 game.up();
-            } else if (key.isKey(KeyCode.DOWN) || key.isCharIgnoreCase('s')) {
+            } else if (key.isKey(KeyCode.DOWN)) {
                 game.down();
             } else if (key.isChar(' ') || key.isKey(KeyCode.ENTER)) {
                 game.confirm();

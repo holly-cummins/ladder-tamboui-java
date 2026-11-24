@@ -194,7 +194,7 @@ public final class Game {
             return;
         }
         int[] chute = level.chutes().get(random.nextInt(level.chutes().size()));
-        carts.add(new Cart(chute[0], chute[1], random.nextBoolean() ? 1 : -1));
+        carts.add(new Cart(chute[0], chute[1], launchDirection(chute[0], chute[1])));
         int interval = level.spawnInterval();
         nextSpawnTick = stateTicks + interval / 2 + random.nextInt(Math.max(1, interval));
     }
@@ -206,13 +206,17 @@ public final class Game {
         }
 
         if (p.jumpStep >= 0) {
-            stepJump();
+            if (!grabLadderInMidAir()) {
+                stepJump();
+            }
             return;
         }
 
         boolean supported = isSupported(p.x, p.y);
         if (!supported && p.climbing == 0) {
-            p.y++; // fall
+            if (!grabLadderInMidAir()) {
+                p.y++; // fall
+            }
             return;
         }
 
@@ -221,8 +225,7 @@ public final class Game {
         }
         if (p.wantJump) {
             p.wantJump = false;
-            p.climbing = 0;
-            p.wantVert = 0;
+            p.climbing = 0; // keep any up/down request: it grabs a ladder met in mid-air
             p.jumpDir = p.dir;
             p.jumpStep = 0;
             stepJump();
@@ -268,6 +271,23 @@ public final class Game {
         }
     }
 
+    /**
+     * Jumping or falling past a ladder grabs it if up or down was pressed recently, so jumping onto a
+     * ladder is a way to reach ones that don't come down to the floor.
+     */
+    private boolean grabLadderInMidAir() {
+        Player p = player;
+        if (p.wantVert == 0 || !isLadder(p.x, p.y)) {
+            return false;
+        }
+        p.jumpStep = -1;
+        p.jumpDir = 0;
+        p.dir = 0;
+        p.climbing = p.wantVert;
+        p.wantVert = 0;
+        return true;
+    }
+
     private void stepJump() {
         Player p = player;
         int dy = JUMP_ARC[p.jumpStep];
@@ -311,32 +331,26 @@ public final class Game {
         p.jumpStep = 0;
     }
 
+    /** Barrels leave a chute away from the pipe beside it; with no pipe, either way. */
+    int launchDirection(int x, int y) {
+        boolean pipeLeft = tileAt(x - 1, y) == Tile.WALL;
+        boolean pipeRight = tileAt(x + 1, y) == Tile.WALL;
+        if (pipeLeft != pipeRight) {
+            return pipeLeft ? 1 : -1;
+        }
+        return random.nextBoolean() ? 1 : -1;
+    }
+
+    /** Barrels only obey gravity and momentum: they fall, keep rolling the same way, and bounce off walls. */
     private void stepCarts() {
         for (Iterator<Cart> it = carts.iterator(); it.hasNext(); ) {
             Cart c = it.next();
-            if (c.descending) {
-                if (c.y + 1 < Level.HEIGHT && (isLadder(c.x, c.y + 1) || tileAt(c.x, c.y + 1) != Tile.ROCK)) {
-                    c.y++;
-                } else {
-                    c.descending = false;
-                    c.dir = random.nextBoolean() ? 1 : -1;
-                }
-            } else if (!isSupported(c.x, c.y)) {
+            if (!isSupported(c.x, c.y)) {
                 c.y++;
-                c.falling = true;
+            } else if (canEnter(c.x + c.dir, c.y)) {
+                c.x += c.dir;
             } else {
-                if (c.falling) {
-                    c.falling = false;
-                    c.dir = random.nextBoolean() ? 1 : -1;
-                }
-                if (isLadder(c.x, c.y + 1) && random.nextInt(3) == 0) {
-                    c.descending = true;
-                    c.y++;
-                } else if (canEnter(c.x + c.dir, c.y)) {
-                    c.x += c.dir;
-                } else {
-                    c.dir = -c.dir;
-                }
+                c.dir = -c.dir;
             }
             if (c.y >= Level.HEIGHT || tileAt(c.x, c.y) == Tile.PIT) {
                 it.remove();
@@ -403,8 +417,14 @@ public final class Game {
         return tileAt(x, y) == Tile.LADDER;
     }
 
+    /** Rock and pipe walls block movement. */
+    boolean isSolid(int x, int y) {
+        Tile t = tileAt(x, y);
+        return t == Tile.ROCK || t == Tile.WALL;
+    }
+
     boolean canEnter(int x, int y) {
-        return tileAt(x, y) != Tile.ROCK;
+        return !isSolid(x, y);
     }
 
     /** True if something at (x, y) would stand rather than fall. */
@@ -413,7 +433,7 @@ public final class Game {
             return false;
         }
         Tile below = tileAt(x, y + 1);
-        return below == Tile.ROCK || below == Tile.LADDER;
+        return below == Tile.ROCK || below == Tile.WALL || below == Tile.LADDER;
     }
 
     // ---------------------------------------------------------------- accessors for rendering and tests
@@ -467,8 +487,6 @@ public final class Game {
         int x;
         int y;
         int dir;
-        boolean falling = true;
-        boolean descending;
 
         Cart(int x, int y, int dir) {
             this.x = x;

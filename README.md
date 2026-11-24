@@ -12,7 +12,7 @@ mvn package
 java --enable-native-access=ALL-UNNAMED -jar target/ladder-0.1.0-SNAPSHOT.jar
 ```
 
-There are two looks. Switch between them on the title screen with ← → (or Tab), or pick the starting one with `--style`:
+There are two looks. Press S to switch between them at any time (← → and Tab also work on the title screen), or pick the starting one with `--style`:
 
 | Option | Look |
 | --- | --- |
@@ -20,8 +20,8 @@ There are two looks. Switch between them on the title screen with ← → (or Ta
 | `--style=modern` | Truecolor, Unicode glyphs, textured rock, shimmering gems and an air gauge. Needs a modern terminal and font. |
 
 In ASCII mode you are the lad, `p` or `q` depending on which way you face, or `g` when still.
-You walk on platforms `=`, climb ladders `H`, and jump over falling boulders `o` to collect minor treasures `&` and reach the main treasure `$`.
-Spikes `^` and boulders cost a life and restart the level.
+You walk on platforms `=`, climb ladders `H`, and jump over rolling barrels `o` to collect minor treasures `&` and reach the main treasure `$`.
+Pipes `|` block your way. Spikes `^` and barrels cost a life and restart the level.
 Landing on a trampoline `.` bounces you off in a random direction.
 
 The terminal must be at least 62x24.
@@ -34,9 +34,10 @@ You start with 4 lads (lives).
 | --- | --- |
 | ← → (or A D) | Run. You keep running until you hit something or press another key. |
 | ↑ (or W) | Climb up. Press it early and you grab the next ladder you pass. |
-| ↓ (or S) | Climb down, or stop if there's no ladder. |
+| ↓ | Climb down, or stop if there's no ladder. |
 | Space | Jump |
 | P | Pause |
+| S | Switch style (ASCII or modern), on the title screen or mid-game |
 | Q / Esc | Quit |
 
 Most terminals don't report key releases, so running is "press to go", not "hold to go".
@@ -59,11 +60,12 @@ spawn: 60     # average ticks between carts (20 ticks a second)
 | Map char | Meaning |
 | --- | --- |
 | `#` | Rock |
-| `\|` | Ladder: from the lower standing row, through the floor above, to the standing row above that |
-| `*` | Gem |
+| `H` | Ladder: from the lower standing row, through the floor above, to the standing row above that |
+| `\|` | Pipe wall: blocks movement like rock. One high, you can jump it. |
+| `&` | Gem |
 | `E` | Exit lift |
-| `v` | Cart chute |
-| `u` | Pit that swallows carts |
+| `v` | Barrel chute. Barrels roll away from a `\|` pipe beside it, and after that only follow gravity and momentum. |
+| `*` | Star that swallows barrels |
 | `^` | Spikes (deadly) |
 | `.` | Trampoline: landing on it bounces you in a random direction |
 | `@` | Player start |
