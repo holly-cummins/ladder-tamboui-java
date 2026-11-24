@@ -203,6 +203,16 @@ class GameTest {
     }
 
     @Test
+    void signMarkerIsParsedAndLeavesAnEmptyCell() {
+        List<String> lines = new ArrayList<>(List.of("name: Test", "---", "", "  [", "", "@"));
+        Level level = Level.parse(lines);
+        assertTrue(level.hasSign());
+        assertEquals(2, level.signX());
+        assertEquals(1, level.signY());
+        assertEquals(Tile.EMPTY, level.copyTiles()[1][2]);
+    }
+
+    @Test
     void shippedLevelsLoad() {
         List<Level> levels = Level.loadAll();
         assertTrue(!levels.isEmpty());

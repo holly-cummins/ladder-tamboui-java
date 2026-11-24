@@ -58,6 +58,21 @@ public final class AsciiTheme implements Theme {
     }
 
     @Override
+    public Cell[] sign(String name) {
+        String text = "[ " + name + " ]";
+        Cell[] cells = new Cell[text.length()];
+        for (int i = 0; i < cells.length; i++) {
+            cells[i] = new Cell(String.valueOf(text.charAt(i)), GREEN);
+        }
+        return cells;
+    }
+
+    @Override
+    public Cell chain() {
+        return new Cell("|", GREEN);
+    }
+
+    @Override
     public Cell player(Game game) {
         if (game.state() == Game.State.DYING) {
             return new Cell((game.ticks() / 4) % 2 == 0 ? "X" : "g", GREEN);
@@ -86,23 +101,16 @@ public final class AsciiTheme implements Theme {
         return Block.builder().borders(Borders.ALL).customBorderSet(DOUBLE_BOX).borderStyle(GREEN).style(GREEN);
     }
 
-    @Override
-    public Line statusLine(Game game) {
-        if (game.level() == null) {
-            return Line.from(Span.styled(" Best ", GREEN), Span.styled(String.valueOf(game.highScore()), GREEN));
-        }
-        return Line.styled(" " + game.level().name() + "   Time: " + game.secondsLeft()
-                + "   Best: " + game.highScore(), GREEN);
-    }
-
-    /** Lads (lives), level and score, under the bottom of the map. */
+    /** Lads (lives), level, score, time and best score, under the bottom of the map. */
     @Override
     public Line infoLine(Game game) {
         if (game.level() == null) {
-            return Line.empty();
+            return Line.styled(" Best: " + game.highScore(), GREEN);
         }
+        String name = game.level().hasSign() ? "" : "   " + game.level().name();
         return Line.styled(" Lads: " + Math.max(0, game.lives()) + "   Level: " + game.levelNumber()
-                + "   Score: " + game.score(), GREEN);
+                + "   Score: " + game.score() + "   Time: " + game.secondsLeft()
+                + "   Best: " + game.highScore() + name, GREEN);
     }
 
     @Override

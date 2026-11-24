@@ -26,6 +26,12 @@ public interface Theme {
 
     Cell cart(Game game, Game.Cart cart);
 
+    /** The level-name sign, one cell per column; its two ends hang from {@link #chain()}s. */
+    Cell[] sign(String name);
+
+    /** One link of the chains the sign hangs from. */
+    Cell chain();
+
     Cell player(Game game);
 
     /** Fills the whole terminal behind the game. */
@@ -44,12 +50,8 @@ public interface Theme {
         return null;
     }
 
-    Line statusLine(Game game);
-
-    /** A line under the playing field, or null for none. */
-    default Line infoLine(Game game) {
-        return null;
-    }
+    /** The line under the playing field: lives, level, score and so on. */
+    Line infoLine(Game game);
 
     /** Banner shown when the clock runs out. */
     default String outOfTimeBanner() {

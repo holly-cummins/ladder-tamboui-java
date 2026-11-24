@@ -21,7 +21,8 @@ import java.util.Map;
  *   *  gem                      E  exit lift
  *   v  cart chute (spawner)     u  pit that swallows carts
  *   ^  spikes (deadly)          .  trampoline
- *   @  player start
+ *   @  player start             [  left end of the sign showing the level name
+ *                                  (it hangs on chains from whatever is above)
  * </pre>
  * Ladders should run from the standing row of the lower floor, through the upper floor,
  * up to the standing row above it.
@@ -39,8 +40,11 @@ public final class Level {
     private final List<int[]> chutes = new ArrayList<>();
     private final int startX;
     private final int startY;
+    private final int signX;
+    private final int signY;
 
-    private Level(String name, int timeLimit, int maxCarts, int spawnInterval, Tile[][] tiles, int startX, int startY) {
+    private Level(String name, int timeLimit, int maxCarts, int spawnInterval, Tile[][] tiles, int startX, int startY,
+            int signX, int signY) {
         this.name = name;
         this.timeLimit = timeLimit;
         this.maxCarts = maxCarts;
@@ -48,6 +52,8 @@ public final class Level {
         this.tiles = tiles;
         this.startX = startX;
         this.startY = startY;
+        this.signX = signX;
+        this.signY = signY;
         for (int y = 0; y < HEIGHT; y++) {
             for (int x = 0; x < WIDTH; x++) {
                 if (tiles[y][x] == Tile.CHUTE) {
@@ -86,10 +92,17 @@ public final class Level {
         Tile[][] tiles = new Tile[HEIGHT][WIDTH];
         int sx = 1;
         int sy = HEIGHT - 2;
+        int signX = -1;
+        int signY = -1;
         for (int y = 0; y < HEIGHT; y++) {
             String row = i + y < lines.size() ? lines.get(i + y) : "";
             for (int x = 0; x < WIDTH; x++) {
                 char c = x < row.length() ? row.charAt(x) : ' ';
+                if (c == '[') {
+                    signX = x;
+                    signY = y;
+                    c = ' ';
+                }
                 if (c == '@') {
                     sx = x;
                     sy = y;
@@ -103,7 +116,7 @@ public final class Level {
                 Integer.parseInt(header.getOrDefault("time", "90")),
                 Integer.parseInt(header.getOrDefault("carts", "4")),
                 Integer.parseInt(header.getOrDefault("spawn", "60")),
-                tiles, sx, sy);
+                tiles, sx, sy, signX, signY);
     }
 
     private static List<String> readLines(String resource) {
@@ -128,6 +141,11 @@ public final class Level {
     }
 
     public String name() { return name; }
+    /** True if the map places a sign showing the level name. */
+    public boolean hasSign() { return signY >= 0; }
+    /** Left end of the name sign, or -1 if there is none. */
+    public int signX() { return signX; }
+    public int signY() { return signY; }
     public int timeLimit() { return timeLimit; }
     public int maxCarts() { return maxCarts; }
     public int spawnInterval() { return spawnInterval; }

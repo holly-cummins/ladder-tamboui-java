@@ -24,7 +24,7 @@ You walk on platforms `=`, climb ladders `H`, and jump over falling boulders `o`
 Spikes `^` and boulders cost a life and restart the level.
 Landing on a trampoline `.` bounces you off in a random direction.
 
-The terminal must be at least 62x25 (62x24 in the modern style).
+The terminal must be at least 62x24.
 
 You start with 4 lads (lives).
 
@@ -48,7 +48,7 @@ Levels are plain text files in `src/main/resources/levels/`, listed in order in 
 Each is 60x20 below a short header:
 
 ```
-name: The Upper Gallery
+name: Easy Street
 time: 90      # seconds of air
 carts: 4      # most carts at once
 spawn: 60     # average ticks between carts (20 ticks a second)
@@ -67,3 +67,4 @@ spawn: 60     # average ticks between carts (20 ticks a second)
 | `^` | Spikes (deadly) |
 | `.` | Trampoline: landing on it bounces you in a random direction |
 | `@` | Player start |
+| `[` | Left end of the sign showing the level name. It hangs on chains from whatever is above it. |

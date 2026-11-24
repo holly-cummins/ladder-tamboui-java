@@ -21,6 +21,7 @@ public final class ModernTheme implements Theme {
     private static final Color[] ROCK_SHADES = {
             Color.rgb(92, 64, 44), Color.rgb(99, 69, 47), Color.rgb(86, 60, 42), Color.rgb(104, 73, 50)};
     private static final Color ROCK_TOP = Color.rgb(176, 132, 84);
+    private static final Color SIGN_WOOD = Color.rgb(122, 74, 36);
 
     private static final Style BASE = Style.EMPTY.bg(CAVERN);
     private static final Style LADDER = BASE.fg(Color.rgb(226, 190, 96));
@@ -82,6 +83,27 @@ public final class ModernTheme implements Theme {
         return new Cell("●", CART);
     }
 
+    /** A wooden plaque with rounded ends and cream lettering. */
+    @Override
+    public Cell[] sign(String name) {
+        Cell[] cells = new Cell[name.length() + 4];
+        Style end = BASE.fg(SIGN_WOOD);
+        Style face = Style.EMPTY.fg(Color.rgb(255, 240, 200)).bg(SIGN_WOOD).bold();
+        cells[0] = new Cell("▐", end);
+        cells[1] = new Cell(" ", face);
+        for (int i = 0; i < name.length(); i++) {
+            cells[i + 2] = new Cell(String.valueOf(name.charAt(i)), face);
+        }
+        cells[cells.length - 2] = new Cell(" ", face);
+        cells[cells.length - 1] = new Cell("▌", end);
+        return cells;
+    }
+
+    @Override
+    public Cell chain() {
+        return new Cell("╎", BASE.fg(Color.rgb(150, 150, 160)));
+    }
+
     @Override
     public Cell player(Game game) {
         if (game.state() == Game.State.DYING) {
@@ -131,14 +153,15 @@ public final class ModernTheme implements Theme {
     }
 
     @Override
-    public Line statusLine(Game game) {
+    public Line infoLine(Game game) {
         if (game.level() == null) {
             return Line.from(Span.styled(" best ", LABEL), Span.styled(String.valueOf(game.highScore()), VALUE));
         }
         int lives = Math.max(0, game.lives());
         int shown = Math.min(Game.STARTING_LIVES, lives);
         return Line.from(
-                Span.styled(" " + game.levelNumber() + " ", LABEL), Span.styled(game.level().name(), VALUE),
+                Span.styled(" level ", LABEL), Span.styled(String.valueOf(game.levelNumber()), VALUE),
+                Span.styled(game.level().hasSign() ? "" : "  " + game.level().name(), VALUE),
                 Span.styled("   ◆ ", LABEL), Span.styled(String.valueOf(game.score()), VALUE),
                 Span.styled("   ", LABEL),
                 Span.styled("♥".repeat(shown), HEART),

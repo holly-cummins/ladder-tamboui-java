@@ -40,9 +40,7 @@ public final class Renderer {
     public void draw(Frame frame, Game game) {
         Rect area = frame.area();
         frame.renderWidget(Block.builder().style(theme.screen()).build(), area);
-        Line info = theme.infoLine(game);
-        int infoH = info == null ? 0 : 1;
-        int totalH = FIELD_H + 2 + infoH; // plus status, info and help lines
+        int totalH = FIELD_H + 2; // plus the info and help lines
         if (area.width() < FIELD_W || area.height() < totalH) {
             frame.renderWidget(Paragraph.builder()
                     .text(Text.from(
@@ -54,10 +52,9 @@ public final class Renderer {
 
         Rect column = centre(area, FIELD_W, totalH);
         List<Rect> rows = Layout.vertical()
-                .constraints(Constraint.length(1), Constraint.length(FIELD_H), Constraint.length(infoH), Constraint.length(1))
+                .constraints(Constraint.length(FIELD_H), Constraint.length(1), Constraint.length(1))
                 .split(column);
 
-        frame.renderWidget(Paragraph.from(theme.statusLine(game)), rows.get(0));
         Block.Builder frameBuilder = theme.fieldFrame()
                 .title(Title.from(Line.from(Span.styled(" LADDER ", theme.value()))).centered());
         Line footer = theme.fieldFooter(game);
@@ -67,18 +64,16 @@ public final class Renderer {
         Block block = frameBuilder.build();
 
         if (game.state() == Game.State.TITLE) {
-            frame.renderWidget(Paragraph.builder().text(titleText(game)).block(block).centered().build(), rows.get(1));
+            frame.renderWidget(Paragraph.builder().text(titleText(game)).block(block).centered().build(), rows.get(0));
         } else {
-            frame.renderWidget(Paragraph.builder().text(field(game)).block(block).build(), rows.get(1));
+            frame.renderWidget(Paragraph.builder().text(field(game)).block(block).build(), rows.get(0));
             String banner = banner(game);
             if (banner != null) {
-                drawBanner(frame, rows.get(1), banner);
+                drawBanner(frame, rows.get(0), banner);
             }
         }
-        if (info != null) {
-            frame.renderWidget(Paragraph.from(info), rows.get(2));
-        }
-        frame.renderWidget(Paragraph.from(Line.styled(theme.helpText(game), theme.label())), rows.get(3));
+        frame.renderWidget(Paragraph.from(theme.infoLine(game)), rows.get(1));
+        frame.renderWidget(Paragraph.from(Line.styled(theme.helpText(game), theme.label())), rows.get(2));
     }
 
     private static Rect centre(Rect area, int w, int h) {
@@ -165,6 +160,7 @@ public final class Renderer {
             for (int x = 0; x < Level.WIDTH; x++) {
                 cells[x] = theme.tile(game, x, y);
             }
+            drawSign(game, cells, y);
             for (Game.Cart c : game.carts()) {
                 if (c.y() == y && c.x() >= 0 && c.x() < Level.WIDTH) {
                     cells[c.x()] = theme.cart(game, c);
@@ -177,6 +173,36 @@ public final class Renderer {
             lines.add(toLine(cells));
         }
         return Text.from(lines);
+    }
+
+    /** Overlays the level-name sign and the chains it hangs from, if the level has one. */
+    private void drawSign(Game game, Theme.Cell[] cells, int y) {
+        Level level = game.level();
+        if (!level.hasSign() || y > level.signY()) {
+            return;
+        }
+        Theme.Cell[] sign = theme.sign(level.name());
+        if (y == level.signY()) {
+            for (int i = 0; i < sign.length && level.signX() + i < Level.WIDTH; i++) {
+                cells[level.signX() + i] = sign[i];
+            }
+            return;
+        }
+        // Above the sign: chains run up from both ends until they meet something to hang from.
+        for (int x : new int[] {level.signX() + 1, level.signX() + sign.length - 2}) {
+            if (x < Level.WIDTH && chainReaches(game, x, y, level.signY())) {
+                cells[x] = theme.chain();
+            }
+        }
+    }
+
+    private static boolean chainReaches(Game game, int x, int y, int signY) {
+        for (int yy = y; yy < signY; yy++) {
+            if (game.tile(x, yy) != Tile.EMPTY) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /** Merges runs of same-styled cells into single spans. */
