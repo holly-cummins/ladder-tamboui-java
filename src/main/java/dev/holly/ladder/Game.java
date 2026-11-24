@@ -14,7 +14,7 @@ public final class Game {
     public enum State { TITLE, HOW_TO_PLAY, PLAYING, PAUSED, DYING, LEVEL_DONE, GAME_OVER }
 
     /** Ticks per second of the game clock; {@link Main} drives {@link #tick()} at this rate. */
-    public static final int TICKS_PER_SECOND = 20;
+    public static final int TICKS_PER_SECOND = 16;
 
     static final int PLAYER_PERIOD = 2;          // player moves every N ticks
     static final int STARTING_LIVES = 4;

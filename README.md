@@ -64,7 +64,7 @@ Each is 60x20 below a short header:
 name: Morning Cup
 time: 90      # seconds on the clock
 boulders: 4    # most boulders at once
-spawn: 60     # average ticks between boulders (20 ticks a second)
+spawn: 60     # average ticks between boulders (16 ticks a second)
 ---
 <map>
 ```

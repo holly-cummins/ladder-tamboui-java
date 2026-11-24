@@ -172,7 +172,7 @@ public final class ModernTheme implements Theme {
                 Span.styled(" level ", LABEL), Span.styled(String.valueOf(game.levelNumber()), VALUE),
                 Span.styled(game.level().hasSign() ? "" : "  " + game.level().name(), VALUE),
                 Span.styled("   ◆ ", LABEL), Span.styled(String.valueOf(game.score()), VALUE),
-                Span.styled("   ", LABEL),
+                Span.styled("   lads ", LABEL),
                 Span.styled("♥".repeat(shown), HEART),
                 Span.styled("♥".repeat(Game.STARTING_LIVES - shown), HEART_LOST),
                 Span.styled("   best ", LABEL), Span.styled(String.valueOf(game.highScore()), VALUE));
