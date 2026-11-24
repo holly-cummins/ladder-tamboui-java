@@ -1,4 +1,4 @@
-package dev.holly.orerunner;
+package dev.holly.ladder;
 
 import java.time.Duration;
 import java.util.Random;

@@ -1,4 +1,4 @@
-# Ore Runner
+# Ladder
 
 A terminal platform game written in Java with [TamboUI](https://tamboui.dev).
 Climb out of the mine before your air runs out, dodging runaway ore carts and grabbing gems on the way.

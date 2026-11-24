@@ -1,4 +1,4 @@
-package dev.holly.orerunner;
+package dev.holly.ladder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,7 +46,7 @@ public final class Renderer {
         if (area.width() < FIELD_W || area.height() < TOTAL_H) {
             frame.renderWidget(Paragraph.builder()
                     .text(Text.from(
-                            Line.from("Ore Runner needs a terminal of at least " + FIELD_W + "x" + TOTAL_H + "."),
+                            Line.from("Ladder needs a terminal of at least " + FIELD_W + "x" + TOTAL_H + "."),
                             Line.from("This one is " + area.width() + "x" + area.height() + ". Press q to quit.")))
                     .build(), area);
             return;
@@ -62,7 +62,7 @@ public final class Renderer {
                 .borders(Borders.ALL)
                 .borderType(BorderType.THICK)
                 .borderStyle(BORDER)
-                .title(Title.from(Line.from(Span.styled(" ORE RUNNER ", VALUE))).centered())
+                .title(Title.from(Line.from(Span.styled(" LADDER ", VALUE))).centered())
                 .build();
 
         if (game.state() == Game.State.TITLE) {

@@ -1,4 +1,4 @@
-package dev.holly.orerunner;
+package dev.holly.ladder;
 
 /** The static contents of one map cell. */
 public enum Tile {
