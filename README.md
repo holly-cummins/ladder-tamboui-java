@@ -26,7 +26,8 @@ Landing on a trampoline `.` bounces you off in a random direction.
 Boulders pour out of dispensers `V` and are swallowed by stars `*`.
 
 In modern mode you are a cyan `▶` or `◀` depending on which way you face, or `☻` when still or climbing.
-Boulders are grey `●`, ladders `╫`, pipes `┃`, spikes `▲`, trampolines `◡`, stars `✺` and the exit `⌂`.
+Boulders are grey `●`, ladders `╫`, pipes `┃`, spikes `▲`, trampolines `◡` and stars `✺`.
+The main treasure is a glinting gold crown `♛`.
 
 The terminal must be at least 62x24.
 

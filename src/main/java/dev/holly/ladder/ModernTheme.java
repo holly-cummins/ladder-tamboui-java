@@ -25,7 +25,7 @@ public final class ModernTheme implements Theme {
 
     private static final Style BASE = Style.EMPTY.bg(CAVERN);
     private static final Style LADDER = BASE.fg(Color.rgb(226, 190, 96));
-    private static final Style EXIT = BASE.fg(Color.rgb(120, 230, 140)).bold();
+    private static final Style EXIT = BASE.fg(Color.rgb(255, 200, 60)).bold();
     private static final Style DISPENSER = BASE.fg(Color.rgb(140, 140, 150));
     private static final Style PIT = BASE.fg(Color.rgb(80, 74, 70));
     private static final Style PIPE = BASE.fg(Color.rgb(140, 160, 178)).bold();
@@ -55,7 +55,7 @@ public final class ModernTheme implements Theme {
             case ROCK -> rock(game, x, y);
             case LADDER -> new Cell("╫", LADDER);
             case TREASURE -> new Cell("◆", BASE.fg(shimmer(t, x, y)).bold());
-            case EXIT -> new Cell("⌂", EXIT);
+            case EXIT -> new Cell("♛", BASE.fg(glint(t)).bold());
             case DISPENSER -> new Cell("▼", DISPENSER);
             case PIT -> new Cell("✺", BASE.fg(lerp(new int[]{150, 90, 255}, new int[]{230, 170, 255},
                     (Math.sin((t + x * 7) / 5.0) + 1) / 2)).bold());
@@ -74,6 +74,12 @@ public final class ModernTheme implements Theme {
             return new Cell("▀", Style.EMPTY.fg(ROCK_TOP).bg(shade));
         }
         return new Cell(" ", Style.EMPTY.bg(shade));
+    }
+
+    /** The crown: deep gold, catching the light now and then. */
+    private static Color glint(long t) {
+        double phase = Math.max(0, Math.sin(t / 3.0)) * Math.max(0, Math.sin(t / 17.0));
+        return lerp(new int[]{255, 190, 40}, new int[]{255, 250, 220}, phase);
     }
 
     private static Color shimmer(long t, int x, int y) {
@@ -169,12 +175,12 @@ public final class ModernTheme implements Theme {
         int lives = Math.max(0, game.lives());
         int shown = Math.min(Game.STARTING_LIVES, lives);
         return Line.from(
-                Span.styled(" level ", LABEL), Span.styled(String.valueOf(game.levelNumber()), VALUE),
-                Span.styled(game.level().hasSign() ? "" : "  " + game.level().name(), VALUE),
-                Span.styled("   ◆ ", LABEL), Span.styled(String.valueOf(game.score()), VALUE),
-                Span.styled("   lads ", LABEL),
+                Span.styled(" lads ", LABEL),
                 Span.styled("♥".repeat(shown), HEART),
                 Span.styled("♥".repeat(Game.STARTING_LIVES - shown), HEART_LOST),
+                Span.styled("   level ", LABEL), Span.styled(String.valueOf(game.levelNumber()), VALUE),
+                Span.styled(game.level().hasSign() ? "" : "  " + game.level().name(), VALUE),
+                Span.styled("   ◆ ", LABEL), Span.styled(String.valueOf(game.score()), VALUE),
                 Span.styled("   best ", LABEL), Span.styled(String.valueOf(game.highScore()), VALUE));
     }
 
@@ -263,7 +269,7 @@ public final class ModernTheme implements Theme {
                 new LegendEntry(new Cell("✺", BASE.fg(Color.rgb(190, 130, 255)).bold()), "star, swallows boulders"),
                 new LegendEntry(new Cell("▲", SPIKES), "spikes, deadly"),
                 new LegendEntry(new Cell("◡", TRAMPOLINE), "trampoline, bounces you"),
-                new LegendEntry(new Cell("⌂", EXIT), "lift to the next level"),
+                new LegendEntry(new Cell("♛", EXIT), "the crown, next level"),
                 new LegendEntry(new Cell("╫", LADDER), "ladder"));
     }
 
