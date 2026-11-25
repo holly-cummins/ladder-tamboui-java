@@ -60,6 +60,11 @@ final class AttractMode {
         }
     }
 
+    /** Starts the first demo after a moment on the title screen, rather than the usual wait. */
+    void startSoon() {
+        idleTicks = IDLE_TICKS - 2 * Game.TICKS_PER_SECOND;
+    }
+
     /** Someone pressed a key: start counting again. */
     void resetIdle() {
         idleTicks = 0;
@@ -69,7 +74,8 @@ final class AttractMode {
         idleTicks = 0;
         Autopilot.Route route = routes.get(nextLevel);
         if (route == null) {
-            return; // still planning; try again after the next wait
+            idleTicks = IDLE_TICKS - 1; // still planning; try again next tick
+            return;
         }
         nextLevel = nextLevel % levels.size() + 1;
         demo = Autopilot.start(levels, route.levelNumber(), route.seed());

@@ -3,6 +3,12 @@
 A terminal platform game written in Java with [TamboUI](https://tamboui.dev).
 Reach the treasure before time runs out, jumping the rolling boulders and grabbing the loot on the way.
 
+| `--style=modern` | `--style=ascii` |
+| --- | --- |
+| ![The self-playing demo in the modern style](docs/ladder-modern.gif) | ![The self-playing demo in the green-screen ASCII style](docs/ladder-ascii.gif) |
+
+These are the game's own attract mode, recorded with TamboUI's built-in asciinema recorder; `docs/record.sh` makes them again.
+
 ## Build and run
 
 The quickest way to play, with nothing to clone or build, is [JBang](https://www.jbang.dev):
@@ -81,7 +87,7 @@ That's how you reach a ladder that doesn't come down to the floor.
 
 Cheat: on the title screen, press a number to start on that level instead of the first.
 
-Leave the title screen alone for 10 seconds and the lad plays a level by himself, like an arcade attract mode.
+Leave the title screen alone for 10 seconds (or start with `--demo`) and the lad plays a level by himself, like an arcade attract mode.
 The route comes from the same search the tests use to prove every level can be finished. Press any key to take over.
 
 ## Levels

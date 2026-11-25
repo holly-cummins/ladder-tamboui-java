@@ -20,11 +20,12 @@ import dev.tamboui.tui.event.TickEvent;
 public final class Main {
 
     private static final String USAGE = """
-            Usage: ladder [--style=ascii|modern] [--sound]
+            Usage: ladder [--style=ascii|modern] [--sound] [--demo]
 
               --style=ascii   green-screen ASCII; works anywhere (default)
               --style=modern  truecolor, Unicode glyphs and animation
               --sound         ring the terminal bell when you lose a lad
+              --demo          start the self-playing demo straight away
 
             You can also switch style at any time with s, or on the title screen with the arrow keys or Tab.
             """;
@@ -39,11 +40,14 @@ public final class Main {
     private boolean mouseCaptured;
 
     /** What the command line asked for. */
-    record Options(Theme theme, boolean sound) {}
+    record Options(Theme theme, boolean sound, boolean demo) {}
 
     private Main(Options options) {
         this.renderer = new Renderer(options.theme());
         this.sound = options.sound();
+        if (options.demo()) {
+            attract.startSoon();
+        }
     }
 
     public static void main(String[] args) throws Exception {
@@ -67,6 +71,7 @@ public final class Main {
     static Options parseArgs(String[] args) {
         String style = "ascii";
         boolean sound = false;
+        boolean demo = false;
         for (int i = 0; i < args.length; i++) {
             String arg = args[i];
             if (arg.equals("-h") || arg.equals("--help")) {
@@ -77,11 +82,13 @@ public final class Main {
                 style = args[++i];
             } else if (arg.equals("--sound")) {
                 sound = true;
+            } else if (arg.equals("--demo")) {
+                demo = true;
             } else {
                 throw new IllegalArgumentException("Unknown option '" + arg + "'.");
             }
         }
-        return new Options(Theme.named(style), sound);
+        return new Options(Theme.named(style), sound, demo);
     }
 
     private void run() throws Exception {
