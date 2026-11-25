@@ -12,6 +12,7 @@ import dev.tamboui.tui.TuiRunner;
 import dev.tamboui.tui.event.Event;
 import dev.tamboui.tui.event.KeyCode;
 import dev.tamboui.tui.event.KeyEvent;
+import dev.tamboui.tui.event.MouseEvent;
 import dev.tamboui.tui.event.ResizeEvent;
 import dev.tamboui.tui.event.TickEvent;
 
@@ -32,6 +33,7 @@ public final class Main {
     private final AttractMode attract = new AttractMode(levels);
     private final Renderer renderer;
     private String windowTitle = "";
+    private boolean mouseCaptured;
 
     private Main(Theme theme) {
         this.renderer = new Renderer(theme);
@@ -89,6 +91,7 @@ public final class Main {
             try {
                 tui.run(this::handle, this::draw);
             } finally {
+                captureMouse(tui, false);
                 tui.backend().leaveAlternateScreen();
             }
         }
@@ -117,7 +120,54 @@ public final class Main {
     private boolean handle(Event event, TuiRunner runner) {
         boolean redraw = react(event, runner);
         updateWindowTitle(runner);
+        captureMouse(runner, attract.running() || game.state() == Game.State.TITLE);
         return redraw;
+    }
+
+    /**
+     * Mouse clicks only do something on the title screen and in the demo. Everywhere else the terminal
+     * keeps the mouse, so links on the how-to screen open and text can be selected as usual.
+     */
+    private void captureMouse(TuiRunner tui, boolean capture) {
+        if (capture == mouseCaptured) {
+            return;
+        }
+        mouseCaptured = capture;
+        try {
+            if (capture) {
+                tui.backend().enableMouseCapture();
+            } else {
+                tui.backend().disableMouseCapture();
+            }
+            tui.backend().flush();
+        } catch (java.io.IOException e) {
+            // no mouse, then; the keyboard still works
+        }
+    }
+
+    /** A click on the title screen picks a style or starts; in the demo it hands back the controls. */
+    private boolean click(MouseEvent mouse) {
+        if (!mouse.isPress() || !mouse.isLeftButton()) {
+            return false;
+        }
+        attract.resetIdle();
+        if (attract.running()) {
+            attract.stop();
+            return true;
+        }
+        if (game.state() != Game.State.TITLE) {
+            return false;
+        }
+        String action = renderer.clickAt(mouse.x(), mouse.y());
+        if (action == null) {
+            return false;
+        }
+        if (action.equals("start")) {
+            game.confirm();
+        } else if (action.startsWith("style:")) {
+            renderer.selectTheme(action.substring("style:".length()));
+        }
+        return true;
     }
 
     /** Names what's on screen in the terminal's title bar; the terminal's own title comes back on exit. */
@@ -149,6 +199,9 @@ public final class Main {
                 }
             }
             return true;
+        }
+        if (event instanceof MouseEvent mouse) {
+            return click(mouse);
         }
         if (event instanceof KeyEvent key) {
             if (key.isQuit() || key.isKey(KeyCode.ESCAPE)) {

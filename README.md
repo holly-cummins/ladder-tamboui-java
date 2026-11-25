@@ -46,6 +46,9 @@ You start with 4 lads (lives).
 | S | Switch style (ASCII or modern), on the title screen or mid-game |
 | Q / Esc | Quit |
 
+On the title screen you can also click a style name to switch to it, or click "Press space to start".
+Clicking during the demo hands the controls back. Elsewhere the game leaves the mouse to your terminal, so links open and text can be selected as usual.
+
 One press is enough: there's no need to hold keys down or mash them, and letting go changes nothing.
 A how-to-play screen says so before your first game.
 

@@ -23,8 +23,19 @@ public final class Renderer {
 
     static final String PROJECT_URL = "https://github.com/holly-cummins/ladder-tamboui-java";
     static final String TAMBOUI_URL = "https://tamboui.dev";
+    private static final String START_TEXT = "Press space to start";
 
     private Theme theme;
+
+    /** Something on screen that does something when clicked: a style name, or the start line. */
+    record ClickTarget(int x, int y, int width, String action) {
+        boolean contains(int cx, int cy) {
+            return cy == y && cx >= x && cx < x + width;
+        }
+    }
+
+    /** Where the clickable things were on the last frame drawn. */
+    private final List<ClickTarget> targets = new ArrayList<>();
 
     public Renderer(Theme theme) {
         this.theme = theme;
@@ -32,6 +43,28 @@ public final class Renderer {
 
     public Theme theme() {
         return theme;
+    }
+
+    /** Switches to the named style, one of {@link Theme#NAMES}. */
+    public void selectTheme(String name) {
+        theme = Theme.named(name);
+    }
+
+    /**
+     * What a click at screen position (x, y) does on the last frame drawn: {@code "style:<name>"},
+     * {@code "start"}, or null for nothing.
+     */
+    public String clickAt(int x, int y) {
+        for (ClickTarget t : targets) {
+            if (t.contains(x, y)) {
+                return t.action();
+            }
+        }
+        return null;
+    }
+
+    List<ClickTarget> clickTargets() {
+        return targets;
     }
 
     /** Moves to the next (+1) or previous (-1) style in {@link Theme#NAMES}, wrapping round. */
@@ -47,6 +80,7 @@ public final class Renderer {
     /** Draws the game, with {@code bottomText} (if not null) in place of the usual help line. */
     public void draw(Frame frame, Game game, String bottomText) {
         Rect area = frame.area();
+        targets.clear();
         frame.renderWidget(Block.builder().style(theme.screen()).build(), area);
         int totalH = FIELD_H + 2; // plus the info and help lines
         if (area.width() < FIELD_W || area.height() < totalH) {
@@ -72,7 +106,9 @@ public final class Renderer {
         Block block = frameBuilder.build();
 
         if (game.state() == Game.State.TITLE) {
-            frame.renderWidget(Paragraph.builder().text(titleText(game)).block(block).centered().build(), rows.get(0));
+            Text title = titleText(game);
+            frame.renderWidget(Paragraph.builder().text(title).block(block).centered().build(), rows.get(0));
+            recordTitleTargets(title, rows.get(0));
         } else if (game.state() == Game.State.HOW_TO_PLAY) {
             frame.renderWidget(Paragraph.builder().text(howToPlayText()).block(block).build(), rows.get(0));
         } else {
@@ -87,6 +123,29 @@ public final class Renderer {
                 ? Line.styled(bottomText, theme.accent())
                 : Line.styled(theme.helpText(game), theme.label());
         frame.renderWidget(Paragraph.from(bottom), rows.get(2));
+    }
+
+    /** Notes where the style names and the start line landed, for {@link #clickAt}. */
+    private void recordTitleTargets(Text title, Rect field) {
+        int innerX = field.x() + 1;
+        int innerY = field.y() + 1;
+        int innerW = field.width() - 2;
+        List<Line> lines = title.lines();
+        for (int i = 0; i < lines.size(); i++) {
+            Line line = lines.get(i);
+            int x = innerX + (innerW - line.width()) / 2;
+            int y = innerY + i;
+            if (line.spans().size() > 1 && line.spans().get(0).content().equals("Style:")) {
+                x += line.spans().get(0).width();
+                for (int s = 1; s < line.spans().size(); s++) {
+                    Span span = line.spans().get(s);
+                    targets.add(new ClickTarget(x, y, span.width(), "style:" + Theme.NAMES.get(s - 1)));
+                    x += span.width();
+                }
+            } else if (line.spans().size() == 1 && line.spans().get(0).content().equals(START_TEXT)) {
+                targets.add(new ClickTarget(x, y, line.width(), "start"));
+            }
+        }
     }
 
     private static Rect centre(Rect area, int w, int h) {
@@ -125,7 +184,7 @@ public final class Renderer {
         lines.addAll(legend());
         lines.add(Line.empty());
         lines.add(styleSwitcher());
-        lines.add(Line.styled("Press space to start", theme.accent()));
+        lines.add(Line.styled(START_TEXT, theme.accent()));
         return Text.from(lines);
     }
 
