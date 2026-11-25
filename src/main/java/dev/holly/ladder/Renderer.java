@@ -102,7 +102,7 @@ public final class Renderer {
                 .build(), r);
     }
 
-    private Text titleText(Game game) {
+    Text titleText(Game game) {
         List<Line> lines = new ArrayList<>();
         lines.add(Line.empty());
         lines.addAll(theme.titleArt(game.ticks()));
@@ -119,14 +119,14 @@ public final class Renderer {
     }
 
     /** Shown once, between the title and the first game: one press of a key is all it takes. */
-    private Text howToPlayText() {
+    Text howToPlayText() {
         List<Line> lines = new ArrayList<>();
         for (int i = 0; i < 3; i++) {
             lines.add(Line.empty());
         }
         lines.add(Line.styled("  HOW TO PLAY", theme.value()));
         lines.add(Line.empty());
-        lines.add(Line.styled("  One press is enough: no need to hold keys down or mash them.", theme.accent()));
+        lines.add(Line.styled("  One press is enough: no need to hold or mash keys.", theme.accent()));
         lines.add(Line.styled("  The lad remembers what you asked for and gets on with it.", theme.accent()));
         lines.add(Line.empty());
         String[][] keys = {
