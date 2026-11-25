@@ -205,6 +205,7 @@ public final class ModernTheme implements Theme {
         return switch (game.state()) {
             case TITLE -> " ␣ start   s ←→ style   q quit";
             case GAME_OVER -> " ␣ start   q quit";
+            case THE_END -> " any key quits";
             case PAUSED -> " p or ␣ resume   q quit";
             case HOW_TO_PLAY -> " any key starts   q quit";
             default -> " ←→ run  ↑↓ climb  ␣ jump  b stop  s style  p pause  q quit";

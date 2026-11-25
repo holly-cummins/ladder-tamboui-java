@@ -40,6 +40,15 @@ class ScreenFitTest {
     }
 
     @Test
+    void endScreensFit() {
+        for (String style : Theme.NAMES) {
+            Renderer renderer = new Renderer(Theme.named(style));
+            assertFits(style + " game over", renderer.endText(gameOver()), INNER_W, INNER_H);
+            assertFits(style + " the end", renderer.endText(theEnd()), INNER_W, INNER_H);
+        }
+    }
+
+    @Test
     void infoAndHelpLinesFitInEveryState() {
         for (String style : Theme.NAMES) {
             Theme theme = Theme.named(style);
@@ -84,7 +93,37 @@ class ScreenFitTest {
         paused.cheatToLevel(1);
         paused.togglePause();
         games.add(paused);
+        games.add(gameOver());
+        games.add(theEnd());
         return games;
+    }
+
+    private static Game gameOver() {
+        Game g = newGame();
+        g.cheatToLevel(1);
+        for (int i = 0; i < 100_000 && g.state() != Game.State.GAME_OVER; i++) {
+            g.tick(); // stand still until the clock runs out, every life
+        }
+        assertTrue(g.state() == Game.State.GAME_OVER);
+        return g;
+    }
+
+    /** A finite game, climbed to the top of the first ladder by the autopilot's route. */
+    private static Game theEnd() {
+        Level first = Level.loadAll().get(0);
+        Game g = new Game(List.of(first.withoutBoulders()), new Random(1));
+        g.startFinite();
+        for (Autopilot.Input input : Autopilot.solve(first.withoutBoulders())) {
+            if (g.state() == Game.State.THE_END) {
+                break;
+            }
+            Autopilot.apply(g, input);
+            for (int t = 0; t < Game.PLAYER_PERIOD; t++) {
+                g.tick();
+            }
+        }
+        assertTrue(g.state() == Game.State.THE_END, "the first ladder ends a finite game");
+        return g;
     }
 
     private static void assertFits(String where, Text text, int width, int height) {

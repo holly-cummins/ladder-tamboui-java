@@ -134,6 +134,7 @@ public final class AsciiTheme implements Theme {
             case TITLE -> " space: start   s or left/right: style   q: quit";
             case HOW_TO_PLAY -> " any key: start    q: quit";
             case GAME_OVER -> " space: start    q: quit";
+            case THE_END -> " any key: quit";
             case PAUSED -> " p or space: resume    q: quit";
             default -> " arrows move  space jump  b stop  s style  p pause  q quit";
         };

@@ -11,7 +11,7 @@ import java.util.Random;
  */
 public final class Game {
 
-    public enum State { TITLE, HOW_TO_PLAY, PLAYING, PAUSED, DYING, LEVEL_DONE, GAME_OVER }
+    public enum State { TITLE, HOW_TO_PLAY, PLAYING, PAUSED, DYING, LEVEL_DONE, GAME_OVER, THE_END }
 
     /** Ticks per second of the game clock; {@link Main} drives {@link #tick()} at this rate. */
     public static final int TICKS_PER_SECOND = 16;
@@ -52,6 +52,7 @@ public final class Game {
     private int timeLeftTicks;
     private int nextSpawnTick;
     private boolean howToPlayShown; // the how-to-play screen is shown before the first game only
+    private boolean finite;         // the game ends at the top of the first ladder
     private int score;
     private int lives;
     private int highScore;
@@ -152,6 +153,16 @@ public final class Game {
     }
 
     /**
+     * A finite game: no title, no instructions, straight into the first level, and it's all over the moment
+     * the lad reaches the top of a ladder. Finite games are frustrating; that's the point.
+     */
+    public void startFinite() {
+        finite = true;
+        howToPlayShown = true;
+        newGame();
+    }
+
+    /**
      * Cheat: from the title screen, starts a new game on level {@code number} (1 is the first) instead.
      * Ignored anywhere else, or if there's no such level.
      */
@@ -230,6 +241,9 @@ public final class Game {
         if (stateTicks % PLAYER_PERIOD == 0) {
             int yBefore = player.y;
             stepPlayer();
+            if (state != State.PLAYING) {
+                return; // the end
+            }
             if (player.y > yBefore) {
                 bounceOffTrampoline();
             }
@@ -311,6 +325,11 @@ public final class Game {
             }
             boolean more = p.climbing < 0 ? isLadder(p.x, p.y - 1) : isLadder(p.x, p.y + 1);
             if (!more) {
+                if (finite && p.climbing < 0) {
+                    highScore = Math.max(highScore, score);
+                    state = State.THE_END;
+                    stateTicks = 0;
+                }
                 p.climbing = 0; // any direction pressed during the climb carries on from here
             }
             return;

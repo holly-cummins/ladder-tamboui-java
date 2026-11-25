@@ -63,6 +63,47 @@ class GameTest {
     }
 
     @Test
+    void aFiniteGameEndsAtTheTopOfTheFirstLadder() {
+        List<String> lines = new ArrayList<>(List.of("name: Test", "time: 60", "boulders: 0", "spawn: 1000", "---"));
+        for (int i = 0; i < Level.HEIGHT - 5; i++) {
+            lines.add("");
+        }
+        lines.addAll(List.of(
+                "  H  ",
+                "##H##",
+                "  H  ",
+                "@ H  ",
+                "#####"));
+        Game g = new Game(List.of(Level.parse(lines)), new Random(1));
+        g.startFinite();
+        assertEquals(Game.State.PLAYING, g.state(), "no title, no instructions");
+        g.right();
+        ticks(g, playerSteps(1));
+        g.up();
+        ticks(g, playerSteps(3));
+        assertEquals(Game.State.PLAYING, g.state(), "still climbing");
+        ticks(g, playerSteps(10));
+        assertEquals(Game.State.THE_END, g.state());
+        ticks(g, 1000);
+        assertEquals(Game.State.THE_END, g.state(), "and that's it: no next level");
+    }
+
+    @Test
+    void anEndlessGameCarriesOnPastTheTopOfALadder() {
+        Game g = game(
+                "  H  ",
+                "##H##",
+                "  H  ",
+                "@ H  ",
+                "#####");
+        g.right();
+        ticks(g, playerSteps(1));
+        g.up();
+        ticks(g, playerSteps(13));
+        assertEquals(Game.State.PLAYING, g.state());
+    }
+
+    @Test
     void stepsOffTheLadderSidewaysAtFloorLevel() {
         Game g = game(
                 "  H    ",

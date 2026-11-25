@@ -111,6 +111,8 @@ public final class Renderer {
             recordTitleTargets(title, rows.get(0));
         } else if (game.state() == Game.State.HOW_TO_PLAY) {
             frame.renderWidget(Paragraph.builder().text(howToPlayText()).block(block).build(), rows.get(0));
+        } else if (game.state() == Game.State.GAME_OVER || game.state() == Game.State.THE_END) {
+            frame.renderWidget(Paragraph.builder().text(endText(game)).block(block).centered().build(), rows.get(0));
         } else {
             frame.renderWidget(Paragraph.builder().text(field(game)).block(block).build(), rows.get(0));
             String banner = banner(game);
@@ -157,7 +159,6 @@ public final class Renderer {
             case PAUSED -> "PAUSED";
             case DYING -> game.secondsLeft() <= 0 && game.lives() > 0 ? theme.outOfTimeBanner() : null;
             case LEVEL_DONE -> "LEVEL CLEAR";
-            case GAME_OVER -> "GAME OVER";
             default -> null;
         };
     }
@@ -185,6 +186,28 @@ public final class Renderer {
         lines.add(Line.empty());
         lines.add(styleSwitcher());
         lines.add(Line.styled(START_TEXT, theme.accent()));
+        return Text.from(lines);
+    }
+
+    /**
+     * The screen after the last lad is lost, or, in a finite game, after the first ladder. The finite one is
+     * deliberately bare: no score, no next level, no way to play again.
+     */
+    Text endText(Game game) {
+        List<Line> lines = new ArrayList<>();
+        for (int i = 0; i < FIELD_H / 2 - 3; i++) {
+            lines.add(Line.empty());
+        }
+        if (game.state() == Game.State.THE_END) {
+            lines.add(Line.styled("Level completed. The end.", theme.plain()));
+        } else {
+            lines.add(Line.styled("GAME OVER", theme.value()));
+            lines.add(Line.empty());
+            lines.add(Line.styled("Not bad for a young lad.", theme.accent()));
+            lines.add(Line.empty());
+            lines.add(Line.from(Span.styled("Score ", theme.label()), Span.styled(String.valueOf(game.score()), theme.value()),
+                    Span.styled("   Best ", theme.label()), Span.styled(String.valueOf(game.highScore()), theme.value())));
+        }
         return Text.from(lines);
     }
 

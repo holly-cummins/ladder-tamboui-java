@@ -20,12 +20,13 @@ import dev.tamboui.tui.event.TickEvent;
 public final class Main {
 
     private static final String USAGE = """
-            Usage: ladder [--style=ascii|modern] [--sound] [--demo]
+            Usage: ladder [--style=ascii|modern] [--sound] [--demo] [--finite]
 
               --style=ascii   green-screen ASCII; works anywhere (default)
               --style=modern  truecolor, Unicode glyphs and animation
               --sound         ring the terminal bell when you lose a lad
               --demo          start the self-playing demo straight away
+              --finite        a finite game: straight in, and over all too soon (modern unless --style)
 
             You can also switch style at any time with s, or on the title screen with the arrow keys or Tab.
             """;
@@ -40,12 +41,14 @@ public final class Main {
     private boolean mouseCaptured;
 
     /** What the command line asked for. */
-    record Options(Theme theme, boolean sound, boolean demo) {}
+    record Options(Theme theme, boolean sound, boolean demo, boolean finite) {}
 
     private Main(Options options) {
         this.renderer = new Renderer(options.theme());
         this.sound = options.sound();
-        if (options.demo()) {
+        if (options.finite()) {
+            game.startFinite();
+        } else if (options.demo()) {
             attract.startSoon();
         }
     }
@@ -69,9 +72,10 @@ public final class Main {
 
     /** Returns the chosen options, or null if help was asked for. */
     static Options parseArgs(String[] args) {
-        String style = "ascii";
+        String style = null;
         boolean sound = false;
         boolean demo = false;
+        boolean finite = false;
         for (int i = 0; i < args.length; i++) {
             String arg = args[i];
             if (arg.equals("-h") || arg.equals("--help")) {
@@ -84,11 +88,16 @@ public final class Main {
                 sound = true;
             } else if (arg.equals("--demo")) {
                 demo = true;
+            } else if (arg.equals("--finite")) {
+                finite = true;
             } else {
                 throw new IllegalArgumentException("Unknown option '" + arg + "'.");
             }
         }
-        return new Options(Theme.named(style), sound, demo);
+        if (style == null) {
+            style = finite ? "modern" : "ascii";
+        }
+        return new Options(Theme.named(style), sound, demo, finite);
     }
 
     private void run() throws Exception {
@@ -244,6 +253,10 @@ public final class Main {
                 return false; // one press is enough: letting go of a key changes nothing
             }
             attract.resetIdle();
+            if (game.state() == Game.State.THE_END) {
+                runner.quit(); // that's all there is
+                return false;
+            }
             if (key.isCharIgnoreCase('s')) {
                 renderer.cycleTheme(1);
                 return true;
