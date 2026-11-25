@@ -25,7 +25,7 @@ Needs Java 25 and Maven.
 
 ```sh
 mvn package
-java --enable-native-access=ALL-UNNAMED -jar target/ladder-0.1.0-SNAPSHOT.jar
+java -jar target/ladder-0.1.0-SNAPSHOT.jar
 ```
 
 For a native executable that starts in milliseconds instead of a JVM warm-up, build with [GraalVM](https://www.graalvm.org) 25:

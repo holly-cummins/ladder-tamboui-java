@@ -19,7 +19,7 @@ for style in ascii modern; do
     tmux new-session -d -s "ladder-record-$style" -x 64 -y 24 \
         "java -Dtamboui.record=$cast -Dtamboui.record.width=64 -Dtamboui.record.height=24 \
               -Dtamboui.record.fps=20 -Dtamboui.record.duration=13000 \
-              --enable-native-access=ALL-UNNAMED -jar target/ladder-0.1.0-SNAPSHOT.jar --demo --style=$style; \
+              -jar target/ladder-0.1.0-SNAPSHOT.jar --demo --style=$style; \
          tmux wait-for -S ladder-recorded-$style"
     tmux wait-for "ladder-recorded-$style"
     agg --quiet --font-family "DejaVu Sans Mono" --font-size 16 --fps-cap 20 --theme "$palette" \
