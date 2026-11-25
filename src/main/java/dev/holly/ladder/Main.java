@@ -20,10 +20,11 @@ import dev.tamboui.tui.event.TickEvent;
 public final class Main {
 
     private static final String USAGE = """
-            Usage: ladder [--style=ascii|modern]
+            Usage: ladder [--style=ascii|modern] [--sound]
 
               --style=ascii   green-screen ASCII; works anywhere (default)
               --style=modern  truecolor, Unicode glyphs and animation
+              --sound         ring the terminal bell when you lose a lad
 
             You can also switch style at any time with s, or on the title screen with the arrow keys or Tab.
             """;
@@ -32,33 +33,40 @@ public final class Main {
     private final Game game = new Game(levels, new Random());
     private final AttractMode attract = new AttractMode(levels);
     private final Renderer renderer;
+    private final boolean sound;
+    private Game.State lastState;
     private String windowTitle = "";
     private boolean mouseCaptured;
 
-    private Main(Theme theme) {
-        this.renderer = new Renderer(theme);
+    /** What the command line asked for. */
+    record Options(Theme theme, boolean sound) {}
+
+    private Main(Options options) {
+        this.renderer = new Renderer(options.theme());
+        this.sound = options.sound();
     }
 
     public static void main(String[] args) throws Exception {
-        Theme theme;
+        Options options;
         try {
-            theme = parseArgs(args);
+            options = parseArgs(args);
         } catch (IllegalArgumentException e) {
             System.err.println(e.getMessage());
             System.err.print(USAGE);
             System.exit(2);
             return;
         }
-        if (theme == null) {
+        if (options == null) {
             System.out.print(USAGE);
             return;
         }
-        new Main(theme).run();
+        new Main(options).run();
     }
 
-    /** Returns the chosen theme, or null if help was asked for. */
-    static Theme parseArgs(String[] args) {
+    /** Returns the chosen options, or null if help was asked for. */
+    static Options parseArgs(String[] args) {
         String style = "ascii";
+        boolean sound = false;
         for (int i = 0; i < args.length; i++) {
             String arg = args[i];
             if (arg.equals("-h") || arg.equals("--help")) {
@@ -67,11 +75,13 @@ public final class Main {
                 style = arg.substring("--style=".length());
             } else if (arg.equals("--style") && i + 1 < args.length) {
                 style = args[++i];
+            } else if (arg.equals("--sound")) {
+                sound = true;
             } else {
                 throw new IllegalArgumentException("Unknown option '" + arg + "'.");
             }
         }
-        return Theme.named(style);
+        return new Options(Theme.named(style), sound);
     }
 
     private void run() throws Exception {
@@ -119,9 +129,24 @@ public final class Main {
 
     private boolean handle(Event event, TuiRunner runner) {
         boolean redraw = react(event, runner);
+        ringOnLosingALad(runner);
         updateWindowTitle(runner);
         captureMouse(runner, attract.running() || game.state() == Game.State.TITLE);
         return redraw;
+    }
+
+    /** With --sound, the terminal bell rings as a lad is lost (not in the demo, which isn't yours to lose). */
+    private void ringOnLosingALad(TuiRunner tui) {
+        Game.State state = game.state();
+        if (sound && state == Game.State.DYING && lastState != Game.State.DYING) {
+            try {
+                tui.backend().writeRaw("\u0007");
+                tui.backend().flush();
+            } catch (java.io.IOException e) {
+                // no bell, then
+            }
+        }
+        lastState = state;
     }
 
     /**
