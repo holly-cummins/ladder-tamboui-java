@@ -1,0 +1,8 @@
+{
+  "aliases": {
+    "ladder": {
+      "script-ref": "ladder.java",
+      "description": "Ladder: a terminal platform game made with TamboUI"
+    }
+  }
+}

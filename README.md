@@ -5,6 +5,16 @@ Reach the treasure before time runs out, jumping the rolling boulders and grabbi
 
 ## Build and run
 
+The quickest way to play, with nothing to clone or build, is [JBang](https://www.jbang.dev):
+
+```sh
+jbang ladder@holly-cummins/ladder-tamboui-java
+```
+
+From a checkout, `jbang ladder` (or `./ladder.java`) runs it straight from the source.
+
+To build it yourself:
+
 Needs Java 25 and Maven.
 
 ```sh
