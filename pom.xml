@@ -44,6 +44,15 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.5.2</version>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.5.0</version>
+                <configuration>
+                    <!-- Otherwise a second mvn package keeps the last fat jar, and shade adds TamboUI to it again. -->
+                    <forceCreation>true</forceCreation>
+                </configuration>
+            </plugin>
             <!--
                 Builds a fat jar: TamboUI is unpacked into the game's jar, so java -jar runs it with nothing else
                 on the classpath. Nothing is relocated. Shade rather than maven-assembly-plugin because shade
