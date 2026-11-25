@@ -136,8 +136,9 @@ public final class Main {
 
     private void draw(Frame frame) {
         if (attract.running()) {
-            renderer.draw(frame, attract.game(),
-                    attract.showQuiche() ? " You eat quiche!" : " DEMO   press any key to play");
+            renderer.draw(frame, attract.game(), " DEMO   press any key to play");
+        } else if (game.state() == Game.State.TITLE && attract.showQuiche()) {
+            renderer.draw(frame, game, " You eat quiche!");
         } else {
             renderer.draw(frame, game);
         }

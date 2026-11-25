@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 final class AttractMode {
 
     static final int IDLE_TICKS = 10 * Game.TICKS_PER_SECOND;   // title screen time before a demo starts
-    static final int QUICHE_TICKS = 3 * Game.TICKS_PER_SECOND;  // how long the halfway message shows
+    static final int QUICHE_TICKS = 3 * Game.TICKS_PER_SECOND;  // how long the title screen's message shows
     private static final int END_TICKS = 3 * Game.TICKS_PER_SECOND / 2; // lingering on the clear or the crash
 
     private final List<Level> levels;
@@ -24,7 +24,6 @@ final class AttractMode {
     private List<Autopilot.Input> inputs;
     private int step;
     private int ticks;
-    private int quicheUntil = -1;
     private int endTicks;
 
     AttractMode(List<Level> levels) {
@@ -82,7 +81,6 @@ final class AttractMode {
         inputs = route.inputs();
         step = 0;
         ticks = 0;
-        quicheUntil = -1;
         endTicks = 0;
     }
 
@@ -95,9 +93,6 @@ final class AttractMode {
     void tick() {
         if (demo.state() == Game.State.PLAYING && ticks % Game.PLAYER_PERIOD == 0 && step < inputs.size()) {
             Autopilot.apply(demo, inputs.get(step++));
-            if (step == inputs.size() / 2) {
-                quicheUntil = ticks + QUICHE_TICKS;
-            }
         }
         demo.tick();
         ticks++;
@@ -107,8 +102,8 @@ final class AttractMode {
         }
     }
 
-    /** True for a few seconds from the halfway point of the route. */
+    /** True for a few seconds from halfway through the title screen's wait for a demo. */
     boolean showQuiche() {
-        return demo != null && ticks < quicheUntil;
+        return demo == null && idleTicks >= IDLE_TICKS / 2 && idleTicks < IDLE_TICKS / 2 + QUICHE_TICKS;
     }
 }

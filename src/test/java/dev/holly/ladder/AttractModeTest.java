@@ -1,5 +1,6 @@
 package dev.holly.ladder;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -10,7 +11,27 @@ import org.junit.jupiter.api.Test;
 class AttractModeTest {
 
     @Test
-    void demoStartsWhenIdleClearsTheLevelAndSaysQuicheHalfway() throws InterruptedException {
+    void theTitleScreenSaysQuicheHalfwayToTheDemo() {
+        AttractMode attract = new AttractMode(Level.loadAll());
+        int firstQuiche = -1;
+        int quicheTicks = 0;
+        for (int t = 0; t < AttractMode.IDLE_TICKS - 1; t++) {
+            attract.idleTick();
+            if (attract.showQuiche()) {
+                quicheTicks++;
+                if (firstQuiche < 0) {
+                    firstQuiche = t + 1;
+                }
+            }
+        }
+        assertEquals(AttractMode.IDLE_TICKS / 2, firstQuiche, "You eat quiche! appears halfway");
+        assertEquals(AttractMode.QUICHE_TICKS, quicheTicks, "for a few seconds");
+        attract.resetIdle();
+        assertFalse(attract.showQuiche(), "a key press clears it");
+    }
+
+    @Test
+    void demoStartsWhenIdleAndClearsTheLevel() throws InterruptedException {
         List<Level> levels = Level.loadAll();
         AttractMode attract = new AttractMode(levels);
         long deadline = System.currentTimeMillis() + 20_000;
@@ -25,19 +46,13 @@ class AttractModeTest {
         assertTrue(attract.running(), "a demo started");
 
         boolean cleared = false;
-        int quicheTicks = 0;
         int ticks = 0;
-        boolean quicheBeforeClear = false;
         while (attract.running() && ticks++ < 10_000) {
             attract.tick();
-            if (attract.showQuiche()) {
-                quicheTicks++;
-                quicheBeforeClear |= !cleared;
-            }
+            assertFalse(attract.showQuiche(), "no quiche in the demo itself");
             cleared |= attract.running() && attract.game().state() == Game.State.LEVEL_DONE;
         }
         assertTrue(cleared, "the demo lad reached the treasure");
-        assertTrue(quicheBeforeClear && quicheTicks > 0, "You eat quiche! showed partway through");
         assertFalse(attract.running(), "and the demo ended by itself");
     }
 }
