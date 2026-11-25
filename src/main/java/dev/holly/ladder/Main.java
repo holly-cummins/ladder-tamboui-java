@@ -1,6 +1,7 @@
 package dev.holly.ladder;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Random;
 
 import dev.tamboui.buffer.Buffer;
@@ -26,7 +27,9 @@ public final class Main {
             You can also switch style at any time with s, or on the title screen with the arrow keys or Tab.
             """;
 
-    private final Game game = new Game(Level.loadAll(), new Random());
+    private final List<Level> levels = Level.loadAll();
+    private final Game game = new Game(levels, new Random());
+    private final AttractMode attract = new AttractMode(levels);
     private final Renderer renderer;
 
     private Main(Theme theme) {
@@ -80,9 +83,9 @@ public final class Main {
             // terminal holds the display until the title is complete; the frame's own end-of-update
             // releases it. Terminals without synchronized output just ignore it.
             tui.backend().writeRaw("\u001b[?2026h\u001b[?1049h");
-            tui.draw(frame -> renderer.draw(frame, game));
+            tui.draw(this::draw);
             try {
-                tui.run(this::handle, frame -> renderer.draw(frame, game));
+                tui.run(this::handle, this::draw);
             } finally {
                 tui.backend().leaveAlternateScreen();
             }
@@ -100,9 +103,27 @@ public final class Main {
         }
     }
 
+    private void draw(Frame frame) {
+        if (attract.running()) {
+            renderer.draw(frame, attract.game(),
+                    attract.showQuiche() ? " You eat quiche!" : " DEMO   press any key to play");
+        } else {
+            renderer.draw(frame, game);
+        }
+    }
+
     private boolean handle(Event event, TuiRunner runner) {
         if (event instanceof TickEvent) {
-            game.tick();
+            if (attract.running()) {
+                attract.tick();
+            } else {
+                game.tick();
+                if (game.state() == Game.State.TITLE) {
+                    attract.idleTick();
+                } else {
+                    attract.resetIdle();
+                }
+            }
             return true;
         }
         if (event instanceof KeyEvent key) {
@@ -113,8 +134,13 @@ public final class Main {
             if (key.isRelease()) {
                 return false; // one press is enough: letting go of a key changes nothing
             }
+            attract.resetIdle();
             if (key.isCharIgnoreCase('s')) {
                 renderer.cycleTheme(1);
+                return true;
+            }
+            if (attract.running()) {
+                attract.stop(); // any other key ends the demo, back to the title
                 return true;
             }
             for (char c = '1'; c <= '9'; c++) {

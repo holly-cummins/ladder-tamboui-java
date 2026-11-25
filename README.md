@@ -56,6 +56,9 @@ That's how you reach a ladder that doesn't come down to the floor.
 
 Cheat: on the title screen, press a number to start on that level instead of the first.
 
+Leave the title screen alone for 10 seconds and the lad plays a level by himself, like an arcade attract mode.
+The route comes from the same search the tests use to prove every level can be finished. Press any key to take over.
+
 ## Levels
 
 Levels are plain text files in `src/main/resources/levels/`, listed in order in `index.txt`.

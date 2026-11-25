@@ -66,6 +66,11 @@ public final class Level {
         }
     }
 
+    /** The same level with no boulders, for planning a route around the rest of it. */
+    Level withoutBoulders() {
+        return new Level(name, timeLimit, 0, spawnInterval, tiles, startX, startY, signX, signY);
+    }
+
     /** Loads every level listed in {@code levels/index.txt} on the classpath. */
     public static List<Level> loadAll() {
         List<Level> levels = new ArrayList<>();

@@ -38,6 +38,11 @@ public final class Renderer {
     }
 
     public void draw(Frame frame, Game game) {
+        draw(frame, game, null);
+    }
+
+    /** Draws the game, with {@code bottomText} (if not null) in place of the usual help line. */
+    public void draw(Frame frame, Game game, String bottomText) {
         Rect area = frame.area();
         frame.renderWidget(Block.builder().style(theme.screen()).build(), area);
         int totalH = FIELD_H + 2; // plus the info and help lines
@@ -75,7 +80,10 @@ public final class Renderer {
             }
         }
         frame.renderWidget(Paragraph.from(theme.infoLine(game)), rows.get(1));
-        frame.renderWidget(Paragraph.from(Line.styled(theme.helpText(game), theme.label())), rows.get(2));
+        Line bottom = bottomText != null
+                ? Line.styled(bottomText, theme.accent())
+                : Line.styled(theme.helpText(game), theme.label());
+        frame.renderWidget(Paragraph.from(bottom), rows.get(2));
     }
 
     private static Rect centre(Rect area, int w, int h) {
