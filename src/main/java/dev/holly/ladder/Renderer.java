@@ -21,6 +21,9 @@ public final class Renderer {
     private static final int FIELD_W = Level.WIDTH + 2;   // plus border
     private static final int FIELD_H = Level.HEIGHT + 2;
 
+    static final String PROJECT_URL = "https://github.com/holly-cummins/ladder-tamboui-java";
+    static final String TAMBOUI_URL = "https://tamboui.dev";
+
     private Theme theme;
 
     public Renderer(Theme theme) {
@@ -61,7 +64,7 @@ public final class Renderer {
                 .split(column);
 
         Block.Builder frameBuilder = theme.fieldFrame()
-                .title(Title.from(Line.from(Span.styled(" LADDER ", theme.value()))).centered());
+                .title(Title.from(Line.from(Span.styled(" LADDER ", theme.value().hyperlink(PROJECT_URL)))).centered());
         Line footer = theme.fieldFooter(game);
         if (footer != null) {
             frameBuilder.titleBottom(Title.from(footer).centered());
@@ -129,7 +132,7 @@ public final class Renderer {
     /** Shown once, between the title and the first game: one press of a key is all it takes. */
     Text howToPlayText() {
         List<Line> lines = new ArrayList<>();
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 2; i++) {
             lines.add(Line.empty());
         }
         lines.add(Line.styled("  HOW TO PLAY", theme.value()));
@@ -153,7 +156,18 @@ public final class Renderer {
         }
         lines.add(Line.empty());
         lines.add(Line.styled("  Press any key to start", theme.accent()));
+        lines.add(Line.empty());
+        lines.add(link("  Made with ", TAMBOUI_URL));
+        lines.add(link("  Source    ", PROJECT_URL));
         return Text.from(lines);
+    }
+
+    /** A label and a clickable link, in terminals that support OSC 8 hyperlinks. */
+    private Line link(String label, String url) {
+        String href = url.startsWith("http") ? url : "https://" + url;
+        return Line.from(
+                Span.styled(label, theme.label()),
+                Span.styled(url.replace("https://", ""), theme.value().hyperlink(href).underlined()));
     }
 
     /** The key to the map, in two columns so the big title fits. */

@@ -31,6 +31,7 @@ public final class Main {
     private final Game game = new Game(levels, new Random());
     private final AttractMode attract = new AttractMode(levels);
     private final Renderer renderer;
+    private String windowTitle = "";
 
     private Main(Theme theme) {
         this.renderer = new Renderer(theme);
@@ -83,6 +84,7 @@ public final class Main {
             // terminal holds the display until the title is complete; the frame's own end-of-update
             // releases it. Terminals without synchronized output just ignore it.
             tui.backend().writeRaw("\u001b[?2026h\u001b[?1049h");
+            updateWindowTitle(tui);
             tui.draw(this::draw);
             try {
                 tui.run(this::handle, this::draw);
@@ -113,6 +115,28 @@ public final class Main {
     }
 
     private boolean handle(Event event, TuiRunner runner) {
+        boolean redraw = react(event, runner);
+        updateWindowTitle(runner);
+        return redraw;
+    }
+
+    /** Names what's on screen in the terminal's title bar; the terminal's own title comes back on exit. */
+    private void updateWindowTitle(TuiRunner tui) {
+        String title;
+        if (attract.running()) {
+            title = "Ladder · demo";
+        } else if (game.level() == null || game.state() == Game.State.TITLE || game.state() == Game.State.HOW_TO_PLAY) {
+            title = "Ladder";
+        } else {
+            title = "Ladder · " + game.level().name();
+        }
+        if (!title.equals(windowTitle)) {
+            windowTitle = title;
+            tui.setWindowTitle(title);
+        }
+    }
+
+    private boolean react(Event event, TuiRunner runner) {
         if (event instanceof TickEvent) {
             if (attract.running()) {
                 attract.tick();
