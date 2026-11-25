@@ -292,6 +292,40 @@ class GameTest {
     }
 
     @Test
+    void pickingUpTreasureSparklesBriefly() {
+        Game g = game(
+                "@ &   ",
+                "######");
+        g.right();
+        ticks(g, playerSteps(2));
+        assertEquals(1, g.effects().size());
+        assertEquals(Game.EffectKind.SPARKLE, g.effects().get(0).kind());
+        ticks(g, Game.EFFECT_TICKS + 1);
+        assertTrue(g.effects().isEmpty(), "and the sparkle fades");
+    }
+
+    @Test
+    void aStarSwallowingABoulderBursts() {
+        List<String> lines = new ArrayList<>(List.of("boulders: 1", "spawn: 1", "---"));
+        for (int i = 0; i < Level.HEIGHT - 5; i++) {
+            lines.add("");
+        }
+        lines.add("          @"); // out of the way, on a shelf
+        lines.add("         ###");
+        lines.add("|v");
+        lines.add("#####    *");
+        lines.add("##########");
+        Game g = new Game(List.of(Level.parse(lines)), new Random(1));
+        g.newGame();
+        boolean burst = false;
+        for (int i = 0; i < 200 && !burst; i++) {
+            g.tick();
+            burst = g.effects().stream().anyMatch(e -> e.kind() == Game.EffectKind.SWALLOW);
+        }
+        assertTrue(burst, "the boulder rolled off the ledge into the star");
+    }
+
+    @Test
     void pipeWallsBlockWalking() {
         Game g = game(
                 "@   |  ",

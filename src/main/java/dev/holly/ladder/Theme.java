@@ -34,6 +34,12 @@ public interface Theme {
 
     Cell player(Game game);
 
+    /** One particle of a burst or sparkle, {@code age} ticks into its {@link Game#EFFECT_TICKS}. */
+    Cell particle(Game.EffectKind kind, int age);
+
+    /** What covers the parts of a new level not yet wiped in. */
+    Cell curtain();
+
     /** Fills the whole terminal behind the game. */
     default Style screen() {
         return Style.EMPTY;

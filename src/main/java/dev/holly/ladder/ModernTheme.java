@@ -129,6 +129,22 @@ public final class ModernTheme implements Theme {
     }
 
     @Override
+    public Cell particle(Game.EffectKind kind, int age) {
+        double fade = Math.min(1.0, age / (double) Game.EFFECT_TICKS);
+        return switch (kind) {
+            case SWALLOW -> new Cell(age < 5 ? "✦" : "·",
+                    BASE.fg(lerp(new int[]{235, 190, 255}, new int[]{70, 40, 90}, fade)).bold());
+            case SPARKLE -> new Cell(age % 4 < 2 ? "✧" : "✦",
+                    BASE.fg(lerp(new int[]{240, 255, 255}, new int[]{60, 120, 150}, fade)).bold());
+        };
+    }
+
+    @Override
+    public Cell curtain() {
+        return new Cell("▒", BASE.fg(Color.rgb(64, 48, 40)));
+    }
+
+    @Override
     public Block.Builder fieldFrame() {
         return Block.builder()
                 .borders(Borders.ALL)

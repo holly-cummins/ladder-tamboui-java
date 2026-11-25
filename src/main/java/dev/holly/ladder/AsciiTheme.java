@@ -88,6 +88,20 @@ public final class AsciiTheme implements Theme {
     }
 
     @Override
+    public Cell particle(Game.EffectKind kind, int age) {
+        String glyph = switch (kind) {
+            case SWALLOW -> age < 4 ? "*" : age < 7 ? "+" : ".";
+            case SPARKLE -> age >= 8 ? "." : age % 4 < 2 ? "+" : "*";
+        };
+        return new Cell(glyph, GREEN);
+    }
+
+    @Override
+    public Cell curtain() {
+        return new Cell(":", GREEN);
+    }
+
+    @Override
     public Style screen() {
         return GREEN;
     }

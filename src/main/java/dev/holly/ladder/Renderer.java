@@ -273,6 +273,7 @@ public final class Renderer {
                 cells[x] = theme.tile(game, x, y);
             }
             drawSign(game, cells, y);
+            drawEffects(game, cells, y);
             for (Game.Boulder c : game.boulders()) {
                 if (c.y() == y && c.x() >= 0 && c.x() < Level.WIDTH) {
                     cells[c.x()] = theme.boulder(game, c);
@@ -282,9 +283,52 @@ public final class Renderer {
             if (p.y() == y) {
                 cells[p.x()] = theme.player(game);
             }
+            drawCurtain(game, cells, y);
             lines.add(toLine(cells));
         }
         return Text.from(lines);
+    }
+
+    /**
+     * Bursts fly out of a star as it swallows a boulder, and sparkles rise from picked-up treasure. Particles
+     * only show in open air, so they never hide the map.
+     */
+    private void drawEffects(Game game, Theme.Cell[] cells, int y) {
+        for (Game.Effect e : game.effects()) {
+            int age = (int) (game.ticks() - e.start());
+            List<int[]> points = new ArrayList<>();
+            switch (e.kind()) {
+                case SWALLOW -> {
+                    int r = 1 + age / 3;
+                    for (int[] d : new int[][] {{-1, 0}, {1, 0}, {-1, -1}, {1, -1}, {0, -1}}) {
+                        points.add(new int[] {e.x() + d[0] * r, e.y() + d[1] * Math.max(1, r / 2)});
+                    }
+                }
+                case SPARKLE -> {
+                    int rise = age / 4;
+                    points.add(new int[] {e.x() - 1, e.y() - 1 - rise});
+                    points.add(new int[] {e.x() + 1, e.y() - 1 - rise});
+                    points.add(new int[] {e.x(), e.y() - 2 - rise});
+                }
+            }
+            for (int[] p : points) {
+                if (p[1] == y && p[0] >= 0 && p[0] < Level.WIDTH && game.tile(p[0], p[1]) == Tile.EMPTY) {
+                    cells[p[0]] = theme.particle(e.kind(), age);
+                }
+            }
+        }
+    }
+
+    /** A new level wipes in from the top: rows not yet reached are still behind the curtain. */
+    private void drawCurtain(Game game, Theme.Cell[] cells, int y) {
+        long age = game.ticksSinceLevelStart();
+        if (age >= Game.WIPE_TICKS) {
+            return;
+        }
+        int revealed = (int) ((age + 1) * Level.HEIGHT / Game.WIPE_TICKS);
+        if (y >= revealed) {
+            java.util.Arrays.fill(cells, theme.curtain());
+        }
     }
 
     /** Overlays the level-name sign and the chains it hangs from, if the level has one. */

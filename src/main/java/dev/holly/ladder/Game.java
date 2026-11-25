@@ -20,6 +20,17 @@ public final class Game {
     static final int STARTING_LIVES = 4;
     static final int[] JUMP_ARC = {-1, -1, 0, 1, 1};
     static final int TREASURE_POINTS = 100;
+    static final int EFFECT_TICKS = 10;   // how long a burst or sparkle lasts
+    static final int WIPE_TICKS = 12;     // how long a new level takes to appear
+
+    /** Things worth a flourish on screen. */
+    public enum EffectKind { SWALLOW, SPARKLE }
+
+    /** A star swallowing a boulder, or treasure being picked up, at (x, y) on game tick {@code start}. */
+    public record Effect(EffectKind kind, int x, int y, long start) {}
+
+    private final List<Effect> effects = new ArrayList<>();
+    private long levelStartTick;
     static final int TIME_BONUS_PER_SECOND = 10;
 
     private static final int DYING_TICKS = 30;
@@ -162,6 +173,8 @@ public final class Game {
         levelIndex = index;
         level = levels.get(index);
         tiles = level.copyTiles();
+        effects.clear();
+        levelStartTick = ticks;
         respawn();
     }
 
@@ -179,6 +192,7 @@ public final class Game {
     public void tick() {
         ticks++;
         stateTicks++;
+        effects.removeIf(e -> ticks - e.start() > EFFECT_TICKS);
         switch (state) {
             case PLAYING -> playTick();
             case DYING -> {
@@ -394,6 +408,9 @@ public final class Game {
                 c.dir = -c.dir;
             }
             if (c.y >= Level.HEIGHT || tileAt(c.x, c.y) == Tile.PIT) {
+                if (c.y < Level.HEIGHT) {
+                    effects.add(new Effect(EffectKind.SWALLOW, c.x, c.y, ticks));
+                }
                 it.remove();
             }
         }
@@ -406,6 +423,7 @@ public final class Game {
             case TREASURE -> {
                 tiles[player.y][player.x] = Tile.EMPTY;
                 score += TREASURE_POINTS;
+                effects.add(new Effect(EffectKind.SPARKLE, player.x, player.y, ticks));
             }
             case SPIKES -> {
                 die();
@@ -490,6 +508,10 @@ public final class Game {
     public int highScore() { return highScore; }
     public int secondsLeft() { return (timeLeftTicks + TICKS_PER_SECOND - 1) / TICKS_PER_SECOND; }
     public long ticks() { return ticks; }
+    /** Bursts and sparkles still playing out. */
+    public List<Effect> effects() { return effects; }
+    /** Ticks since the current level began; the renderer wipes the level in over the first few. */
+    public long ticksSinceLevelStart() { return ticks - levelStartTick; }
 
     // ---------------------------------------------------------------- entities
 

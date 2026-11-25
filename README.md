@@ -30,6 +30,7 @@ Boulders pour out of dispensers `V` and are swallowed by stars `*`.
 In modern mode you are a cyan `▶` or `◀` depending on which way you face, or `☻` when still or climbing.
 Boulders are grey `●`, ladders `╫`, pipes `┃`, spikes `▲`, trampolines `◡` and stars `✺`.
 The main treasure is a glinting gold crown `♛`.
+Treasure sparkles as you grab it, stars burst as they swallow boulders, and each level wipes in from the top.
 
 The terminal must be at least 62x24.
 
