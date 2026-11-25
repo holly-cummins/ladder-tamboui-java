@@ -1,0 +1,78 @@
+# Re-records the README animations (docs/ladder-*.gif) after a successful build of main, and commits them.
+# Recordings run in real time, so they never come out byte-for-byte the same; to keep the repository from
+# filling up with GIFs, they're only re-recorded when the game itself has changed since the last recording.
+name: Record demos
+
+on:
+  workflow_run:
+    workflows: [Build]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch: # re-record by hand, whatever changed
+
+permissions:
+  contents: write
+
+concurrency:
+  group: record-demos
+  cancel-in-progress: false
+
+jobs:
+  record:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Has the game changed since the last recording?
+        id: changes
+        run: |
+          last=$(git log -1 --format=%H -- docs/ladder-ascii.gif docs/ladder-modern.gif)
+          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ] || [ -z "$last" ] \
+              || [ -n "$(git diff --name-only "$last" HEAD -- src/main pom.xml docs/record.sh)" ]; then
+            echo "record=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Nothing that shows in the demo has changed since $last."
+            echo "record=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - if: steps.changes.outputs.record == 'true'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: maven
+
+      - name: Install tmux, agg and a font
+        if: steps.changes.outputs.record == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y tmux fonts-dejavu-core
+          sudo curl -fsSL -o /usr/local/bin/agg \
+              https://github.com/asciinema/agg/releases/download/v1.9.0/agg-x86_64-unknown-linux-gnu
+          sudo chmod +x /usr/local/bin/agg
+
+      - name: Record
+        if: steps.changes.outputs.record == 'true'
+        run: docs/record.sh
+
+      - name: Commit the new recordings
+        if: steps.changes.outputs.record == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/ladder-ascii.gif docs/ladder-modern.gif
+          if git diff --cached --quiet; then
+            echo "The recordings are unchanged."
+            exit 0
+          fi
+          git commit -m "Re-record the README demos"
+          # main may have moved on while recording; this commit only touches the GIFs, so rebasing is safe.
+          git pull --rebase origin main
+          git push origin HEAD:main
